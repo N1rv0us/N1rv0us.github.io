@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android, CTFTrain,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="云CTF中的android-web题目写在前面的絮叨前些日子看群里dalao开开心心的组队CTF，偶然放出来一到有APK的web题目，需要逆向apk功能，于是参与了一手，学习了一些知识，熟练了一下能力。怎奈忘了带数据线，不能抓包得不到COOKIE，痛失flag。。。 题目分析熟练的使用jadx逆向一下apk，找到MainActivity，可以发现如下的代码： 1234567891011121314">
+<meta name="keywords" content="android, CTFTrain">
+<meta property="og:type" content="article">
+<meta property="og:title" content="云CTF中的android-web题目">
+<meta property="og:url" content="http://N1rv0us@github.io/2019/09/24/云CTF中的android-web题目/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="云CTF中的android-web题目写在前面的絮叨前些日子看群里dalao开开心心的组队CTF，偶然放出来一到有APK的web题目，需要逆向apk功能，于是参与了一手，学习了一些知识，熟练了一下能力。怎奈忘了带数据线，不能抓包得不到COOKIE，痛失flag。。。 题目分析熟练的使用jadx逆向一下apk，找到MainActivity，可以发现如下的代码： 1234567891011121314">
+<meta property="og:locale" content="cn">
+<meta property="og:updated_time" content="2019-09-24T17:16:06.313Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="云CTF中的android-web题目">
+<meta name="twitter:description" content="云CTF中的android-web题目写在前面的絮叨前些日子看群里dalao开开心心的组队CTF，偶然放出来一到有APK的web题目，需要逆向apk功能，于是参与了一手，学习了一些知识，熟练了一下能力。怎奈忘了带数据线，不能抓包得不到COOKIE，痛失flag。。。 题目分析熟练的使用jadx逆向一下apk，找到MainActivity，可以发现如下的代码： 1234567891011121314">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2019/09/24/云CTF中的android-web题目/">
+
+
+
+
+
+  <title>云CTF中的android-web题目 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2019/09/24/云CTF中的android-web题目/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">云CTF中的android-web题目</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-24T19:18:10+08:00">
+                2019-09-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="云CTF中的android-web题目"><a href="#云CTF中的android-web题目" class="headerlink" title="云CTF中的android-web题目"></a>云CTF中的android-web题目</h1><h2 id="写在前面的絮叨"><a href="#写在前面的絮叨" class="headerlink" title="写在前面的絮叨"></a>写在前面的絮叨</h2><p>前些日子看群里dalao开开心心的组队CTF，偶然放出来一到有APK的web题目，需要逆向apk功能，于是参与了一手，学习了一些知识，熟练了一下能力。怎奈忘了带数据线，不能抓包得不到COOKIE，痛失flag。。。</p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><p>熟练的使用jadx逆向一下apk，找到MainActivity，可以发现如下的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> <span class="keyword">implements</span> <span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> String DATA;</span><br><span class="line">    <span class="keyword">public</span> String URL;</span><br><span class="line">    <span class="meta">@SuppressLint</span>(&#123;<span class="string">"HandlerLeak"</span>&#125;)</span><br><span class="line">    Handler handler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">super</span>.handleMessage(msg);</span><br><span class="line">            String val = msg.getData().getString(<span class="string">"value"</span>);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (val.equals(<span class="string">"ok"</span>)) &#123;</span><br><span class="line">                    Toast.makeText(MainActivity.<span class="keyword">this</span>, val, <span class="number">0</span>).show();</span><br><span class="line">                    MainActivity.<span class="keyword">this</span>.startGame();</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                Toast.makeText(MainActivity.<span class="keyword">this</span>, <span class="string">"登录失败"</span>, <span class="number">0</span>).show();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    Runnable runnable = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            String result = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result = HttpUnit.post(MainActivity.<span class="keyword">this</span>.URL, RsaUnit.private_encrypt(MainActivity.<span class="keyword">this</span>.DATA));</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            Message msg = <span class="keyword">new</span> Message();</span><br><span class="line">            Bundle data = <span class="keyword">new</span> Bundle();</span><br><span class="line">            data.putString(<span class="string">"value"</span>, result);</span><br><span class="line">            msg.setData(data);</span><br><span class="line">            MainActivity.<span class="keyword">this</span>.handler.sendMessage(msg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* access modifiers changed from: protected */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        RsaUnit.genKeyPair();</span><br><span class="line">        CookieHandler.setDefault(<span class="keyword">new</span> CookieManager());</span><br><span class="line">        setContentView(C0336R.layout.activity_main);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (v.getId() == C0336R.C0338id.btnGame) &#123;</span><br><span class="line">            EditText player_edit = (EditText) findViewById(C0336R.C0338id.editText2);</span><br><span class="line">            HttpUnit.baseHOST = ((EditText) findViewById(C0336R.C0338id.editText)).getText().toString();</span><br><span class="line">            JSONObject jsonObject = <span class="keyword">new</span> JSONObject();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                jsonObject.put(<span class="string">"player"</span>, player_edit.getText().toString());</span><br><span class="line">                <span class="keyword">this</span>.DATA = jsonObject.toString();</span><br><span class="line">                <span class="keyword">this</span>.URL = <span class="string">"http://"</span> + HttpUnit.baseHOST + <span class="string">"/startgame/"</span>;</span><br><span class="line">                <span class="keyword">new</span> Thread(<span class="keyword">this</span>.runnable).start();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startGame</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        startActivity(<span class="keyword">new</span> Intent(<span class="keyword">this</span>, GameActivity.class));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码功能并不难理解，但是稍微有点分散，在这里简单的说明一句吧</p>
+<ul>
+<li>handler：用于判断http请求的返回值，如果是OK，则说明登陆成功。</li>
+<li>Runnable: 发送HTTP请求，并将返回的内容交给Handle去处理。值得注意的是，在这里HTTP的传输由<code>HttpUnit</code>来实现，数据交由<code>RsaUnit</code>加密以后发送给服务器。</li>
+<li>onClick: 获取用户输入信息（服务器地址和username），设置URI为/startgame/，DATA为包含用户名的json字符串</li>
+<li>startGame: 启动GameActivity开始游戏。</li>
+</ul>
+<p>分析一下GameActivity可以发现（由于篇幅关系不贴代码了），就是启动了一下game包中的功能，在<code>com.ispring.gameplane.game.GameView</code>中，可以发现数据传输和MainActivity中是一样的，而具体的分数上传在下面这段代码里面：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addScore</span><span class="params">(<span class="keyword">int</span> value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.score += (<span class="keyword">long</span>) value;</span><br><span class="line">    JSONObject jsonObject = <span class="keyword">new</span> JSONObject();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        jsonObject.put(<span class="string">"score"</span>, value);</span><br><span class="line">        jsonObject.put(<span class="string">"op"</span>, <span class="string">"add"</span>);</span><br><span class="line">        <span class="keyword">this</span>.DATA = jsonObject.toString();</span><br><span class="line">        <span class="keyword">this</span>.URL = <span class="string">"http://"</span> + HttpUnit.baseHOST + <span class="string">"/score/"</span>;</span><br><span class="line">        <span class="keyword">new</span> Thread(<span class="keyword">this</span>.runnable).start();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此我们知道了需要回传的URL和DATA的数据格式，题目要求我们的分数要是99999，于是我们照葫芦画瓢再写一个exp的app就可以了。</p>
+<p>恰好前段时间练习用的ActivityTest还没删，于是代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    Handler handler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">super</span>.handleMessage(msg);</span><br><span class="line">            String val = msg.getData().getString(<span class="string">"value"</span>);</span><br><span class="line">            Toast.makeText(MainActivity.<span class="keyword">this</span>,val,Toast.LENGTH_LONG).show();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    Runnable runnable1 = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            String result = <span class="keyword">null</span>;</span><br><span class="line">            String URL1 = <span class="string">"http://121.40.219.183:9999/startgame/"</span>;</span><br><span class="line">            String URL = <span class="string">"http://121.40.219.183:9999/score/"</span>;</span><br><span class="line">            RsaUnit.genKeyPair();</span><br><span class="line"></span><br><span class="line">            JSONObject jsonObject = <span class="keyword">new</span> JSONObject();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//sleep(10000);</span></span><br><span class="line">                <span class="keyword">int</span> value = <span class="number">99999</span>;</span><br><span class="line">                jsonObject.put(<span class="string">"score"</span>,value);</span><br><span class="line">                jsonObject.put(<span class="string">"op"</span>,<span class="string">"add"</span>);</span><br><span class="line">                String DATA =  jsonObject.toString();</span><br><span class="line"></span><br><span class="line">                result = HttpUnit.post(URL,RsaUnit.private_encrypt(DATA));</span><br><span class="line">                Message msg = <span class="keyword">new</span> Message();</span><br><span class="line">                Bundle data = <span class="keyword">new</span> Bundle();</span><br><span class="line">                data.putString(<span class="string">"value"</span>,result);</span><br><span class="line">                msg.setData(data);</span><br><span class="line">                MainActivity.<span class="keyword">this</span>.handler.sendMessage(msg);</span><br><span class="line">                Log.d(<span class="string">"GetFlag:"</span>,result);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (JSONException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    Runnable runnable = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            String result = <span class="keyword">null</span>;</span><br><span class="line">            String URL1 = <span class="string">"http://121.40.219.183:9999/startgame/"</span>;</span><br><span class="line">            String URL = <span class="string">"http://121.40.219.183:9999/score/"</span>;</span><br><span class="line">            RsaUnit.genKeyPair();</span><br><span class="line"></span><br><span class="line">            JSONObject json = <span class="keyword">new</span> JSONObject();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                json.put(<span class="string">"player"</span>, <span class="string">"attacker"</span>);</span><br><span class="line">                String data1 = json.toString();</span><br><span class="line"></span><br><span class="line">                result = HttpUnit.post(URL1,RsaUnit.private_encrypt(data1));</span><br><span class="line"></span><br><span class="line">                Message msg = <span class="keyword">new</span> Message();</span><br><span class="line">                Bundle data = <span class="keyword">new</span> Bundle();</span><br><span class="line">                data.putString(<span class="string">"value"</span>,result);</span><br><span class="line">                msg.setData(data);</span><br><span class="line">                MainActivity.<span class="keyword">this</span>.handler.sendMessage(msg);</span><br><span class="line">                Log.d(<span class="string">"GetLogin:"</span>,result);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">catch</span> (JSONException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>由于这是在一个app基础上改的，有点乱，于是只截取了部分的代码，总之由于HttpUnit和RsaUnit都是已经写好的，不如就直接拿过来用，会方便不少。</p>
+<p>运行代码会发现，注册部分会显示OK，但是分数上传的部分会显示Login first。说明服务器有验证登陆的机制，但是我在APK代码里面找了一大圈，也没发现有类似于cookie的设置。这说明很可能是题目有bug——就算你玩到了99999分直接用app的功能还是不能获取到flag。</p>
+<p>在登陆的过程中，服务器会将一个Cookie回传过来，用代理截取一下，然后在发送分数的数据包，即可获的flag了。</p>
+<h2 id="一些可能只对我有意义的内容"><a href="#一些可能只对我有意义的内容" class="headerlink" title="一些可能只对我有意义的内容"></a>一些可能只对我有意义的内容</h2><ul>
+<li>当apk需要使用网络的时候，必须在AndroidManifest.xml中设置<code>&lt;uses-permission android:name=&quot;android.permission.INTERNET&quot; /&gt;</code></li>
+<li></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-CTFTrain/" rel="tag"># android, CTFTrain</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/23/Android-题目练习Day1/" rel="next" title="Android 题目练习Day1">
+                <i class="fa fa-chevron-left"></i> Android 题目练习Day1
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#云CTF中的android-web题目"><span class="nav-number">1.</span> <span class="nav-text">云CTF中的android-web题目</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面的絮叨"><span class="nav-number">1.1.</span> <span class="nav-text">写在前面的絮叨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题目分析"><span class="nav-number">1.2.</span> <span class="nav-text">题目分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一些可能只对我有意义的内容"><span class="nav-number">1.3.</span> <span class="nav-text">一些可能只对我有意义的内容</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
