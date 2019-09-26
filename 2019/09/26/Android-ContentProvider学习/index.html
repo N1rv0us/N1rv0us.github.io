@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Android Content Provider学习写在前面的絮叨Content Provider是Android一种特殊的持久化存储形式，它能够一定安全性的完成存储数据在不同APP之间的共享。Android系统本身提供了一系列的ContentProvider用于共享一些常用的数据（音频，视频，图像，个人联系人信息，等等）。 当我们需要分享一部分数据的时候可以有一下的两种形式来完成：你可以创建你自">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-ContentProvider学习">
+<meta property="og:url" content="http://N1rv0us@github.io/2019/09/26/Android-ContentProvider学习/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="Android Content Provider学习写在前面的絮叨Content Provider是Android一种特殊的持久化存储形式，它能够一定安全性的完成存储数据在不同APP之间的共享。Android系统本身提供了一系列的ContentProvider用于共享一些常用的数据（音频，视频，图像，个人联系人信息，等等）。 当我们需要分享一部分数据的时候可以有一下的两种形式来完成：你可以创建你自">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-ContentProvider%E5%AD%A6%E4%B9%A0/66DBE03F-9920-43F4-A633-C1CAA54A5295.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-ContentProvider%E5%AD%A6%E4%B9%A0/6B158CD7-4D67-4529-A828-56EF29D79317.png">
+<meta property="og:updated_time" content="2019-09-26T08:32:48.230Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android-ContentProvider学习">
+<meta name="twitter:description" content="Android Content Provider学习写在前面的絮叨Content Provider是Android一种特殊的持久化存储形式，它能够一定安全性的完成存储数据在不同APP之间的共享。Android系统本身提供了一系列的ContentProvider用于共享一些常用的数据（音频，视频，图像，个人联系人信息，等等）。 当我们需要分享一部分数据的时候可以有一下的两种形式来完成：你可以创建你自">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-ContentProvider%E5%AD%A6%E4%B9%A0/66DBE03F-9920-43F4-A633-C1CAA54A5295.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2019/09/26/Android-ContentProvider学习/">
+
+
+
+
+
+  <title>Android-ContentProvider学习 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2019/09/26/Android-ContentProvider学习/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android-ContentProvider学习</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-26T15:50:18+08:00">
+                2019-09-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Android-Content-Provider学习"><a href="#Android-Content-Provider学习" class="headerlink" title="Android Content Provider学习"></a>Android Content Provider学习</h1><h2 id="写在前面的絮叨"><a href="#写在前面的絮叨" class="headerlink" title="写在前面的絮叨"></a>写在前面的絮叨</h2><p>Content Provider是Android一种特殊的持久化存储形式，它能够一定安全性的完成存储数据在不同APP之间的共享。Android系统本身提供了一系列的ContentProvider用于共享一些常用的数据（音频，视频，图像，个人联系人信息，等等）。</p>
+<p>当我们需要分享一部分数据的时候可以有一下的两种形式来完成：你可以创建你自己的ContentProvider（一个ContentProvider子类）或者你可以给已有的提供器添加数据，前提是存在一个控制同样类型数据的ContentProvider且你拥有读写权限。</p>
+<h2 id="Android-user-premession"><a href="#Android-user-premession" class="headerlink" title="Android user-premession"></a>Android user-premession</h2><p>Android为了保护用户的一些隐私信息不会被恶意使用设置了<user-premession>让每个APP需要申请相关权限才能完成一些敏感行为。这同时也导致了一些不给权限就不能用的流氓软件行为。为了解决这一问题，Anroid6.0以后引入了使用时申请权限的方案。其实，这种方案的作用就是提醒用户，APP在何时做了哪些敏感操作。</user-premession></p>
+<p>Android将权限分成了三类：</p>
+<ul>
+<li>普通权限：不会直接威胁到用户的隐私，由系统自动授权；</li>
+<li>危险权限：可能会破坏用户的隐私以及安全，需要用户点击授权；</li>
+<li>特殊权限：一个不太常见，我不知道是干嘛用的权限；</li>
+</ul>
+<p>对于危险权限，一共有9组24个，需要注意的是，一旦用户提供了某个危险权限，也就意味着同时赋予了整个组的权限。</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-ContentProvider%E5%AD%A6%E4%B9%A0/66DBE03F-9920-43F4-A633-C1CAA54A5295.png" alt="66DBE03F-9920-43F4-A633-C1CAA54A5295"></p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-ContentProvider%E5%AD%A6%E4%B9%A0/6B158CD7-4D67-4529-A828-56EF29D79317.png" alt="66DBE03F-9920-43F4-A633-C1CAA54A5295"></p>
+<p>申请危险权限的时候，除了需要在AndroidManifest.xml中添加声明以外，同时还需要在Activity中添加相关操作，基本就是一个模版，模版代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">    setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">    ListView contactsView = (ListView)findViewById(R.id.contacts_view);</span><br><span class="line">    adapter = <span class="keyword">new</span> ArrayAdapter&lt;String&gt;(<span class="keyword">this</span>,android.R.layout.simple_list_item_1,contactsList);</span><br><span class="line">    contactsView.setAdapter(adapter);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ContextCompat.checkSelfPermission(<span class="keyword">this</span>, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) &#123;</span><br><span class="line">        ActivityCompat.requestPermissions(<span class="keyword">this</span>,<span class="keyword">new</span> String[]&#123;Manifest.permission.READ_CONTACTS&#125;,<span class="number">1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        readContacts();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">  	</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onRequestPermissionsResult</span><span class="params">(<span class="keyword">int</span> resultCode,String[] permissions,<span class="keyword">int</span>[] grantResults)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (resultCode) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">            <span class="keyword">if</span>(grantResults.length &gt;<span class="number">0</span> &amp;&amp; grantResults[<span class="number">0</span>] == PackageManager.PERMISSION_GRANTED) &#123;</span><br><span class="line">                readContacts();</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Toast.makeText(<span class="keyword">this</span>,<span class="string">"You denied the permission"</span>,Toast.LENGTH_SHORT).show();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用存在的Content-Provider"><a href="#使用存在的Content-Provider" class="headerlink" title="使用存在的Content Provider"></a>使用存在的Content Provider</h2><p>Android中提供了一个ContentResolver来完成所需要的各种CRUD操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ContentProvider Instructions</span></span><br><span class="line"><span class="comment">// uri:</span></span><br><span class="line">Uri uri = Uri.parse(<span class="string">"content://com.example.app.provider/table"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*query</span></span><br><span class="line"><span class="comment">* projection:column name</span></span><br><span class="line"><span class="comment">* selection:where</span></span><br><span class="line"><span class="comment">* selectionArgs</span></span><br><span class="line"><span class="comment">* sortOrder:order by</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">Cursor cursor = getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);</span><br><span class="line"><span class="keyword">if</span> (cursor != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">while</span>(cursor.moveToNext()) &#123;</span><br><span class="line">        String column = cursor.getString(cursor.getColumnIndex(<span class="string">"column1"</span>));</span><br><span class="line">        String column2 = cursor.getString(cursor.getColumnIndex(<span class="string">"column2"</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    cursor.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//insert</span></span><br><span class="line">ContentValues values = <span class="keyword">new</span> ContentValues();</span><br><span class="line">values.put(<span class="string">"column1"</span>,<span class="string">"text"</span>);</span><br><span class="line">values.put(<span class="string">"column2"</span>,<span class="number">1</span>);</span><br><span class="line">getContentResolver().insert(uri,values);</span><br><span class="line"></span><br><span class="line"><span class="comment">//update</span></span><br><span class="line">ContentValues values = <span class="keyword">new</span> ContentValues();</span><br><span class="line">values.put(<span class="string">"column1"</span>,<span class="string">""</span>);</span><br><span class="line">getContentResolver().update(uri,values,<span class="string">"column1= ? and column2= ?"</span>,<span class="keyword">new</span> String[]&#123;<span class="string">"text"</span>,<span class="string">"1"</span>&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">//delete</span></span><br><span class="line">getContentResolver().delete(uri,<span class="string">"column2 = ?"</span>,<span class="keyword">new</span> String[]&#123;<span class="number">1</span>&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>其操作方式基本和SQLite相同，区别在于ContentReslover使用的是URI来定位需要使用的数据库及表单，URI格式如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">content://com.example.app.provider/table</span><br><span class="line">content://+authority+tablename</span><br></pre></td></tr></table></figure>
+
+<h2 id="自己创建一个Content-Provider"><a href="#自己创建一个Content-Provider" class="headerlink" title="自己创建一个Content Provider"></a>自己创建一个Content Provider</h2><p>使用AnroidStudio，在本项目的java目录下，右键package名称-&gt;New-&gt;Other-&gt;Content Provider就可以创建一个自己的ContentProvider，需要自己覆写里面的6种方法，同时需要配置AndroidManifest.xml。当然，创建class的时候，AndroidStudio就已经为你配置好了。然后按照如下模版编辑即可</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyProvider</span> <span class="keyword">extends</span> <span class="title">ContentProvider</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TABLE1_DIR = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TABLE1_ITEM = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TABLE2_DIR = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TABLE2_ITEM = <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> UriMatcher uriMatcher;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        uriMatcher = <span class="keyword">new</span> UriMatcher(UriMatcher.NO_MATCH);</span><br><span class="line">        uriMatcher.addURI(<span class="string">"com.example.app.provider"</span>,<span class="string">"table1"</span>,TABLE1_DIR);</span><br><span class="line">        uriMatcher.addURI(<span class="string">"com.example.app.provider"</span>,<span class="string">"table1/#"</span>,TABLE1_ITEM);</span><br><span class="line">        uriMatcher.addURI(<span class="string">"com.example.app.provider"</span>,<span class="string">"table2"</span>,TABLE2_DIR);</span><br><span class="line">        uriMatcher.addURI(<span class="string">"com.example.app.provider"</span>,<span class="string">"table2/#"</span>,TABLE2_ITEM);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getType</span><span class="params">(@NonNull Uri uri)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">switch</span> (uriMatcher.match(uri)) &#123;</span><br><span class="line">            <span class="keyword">case</span> TABLE1_DIR:</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"vnd.android.cursor.dir/vnd.com.example.app.provider.table1"</span>;</span><br><span class="line">            <span class="keyword">case</span> TABLE1_ITEM:</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"vnd.android.cursor.item/vnd.com.example.app.provider.table1"</span>;</span><br><span class="line">            <span class="keyword">case</span> TABLE2_DIR:</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"vnd.android.cursor.dir/vnd.com.example.app.provider.table2"</span>;</span><br><span class="line">            <span class="keyword">case</span> TABLE2_ITEM:</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"vnd.android.cursor.item/vnd.com.example.app.provider.table2"</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Content-Provider-测试方法"><a href="#Content-Provider-测试方法" class="headerlink" title="Content Provider 测试方法"></a>Content Provider 测试方法</h2><ol>
+<li>反编译查看AndroidManifest.xml（drozer扫描）文件定位content provider是否导出，是否配置权限，确定authority</li>
+<li>反编译查找path，关键字<code>addURI</code>、hook api 动态监测</li>
+<li></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/26/Android持久化存储学习/" rel="next" title="Android持久化存储学习">
+                <i class="fa fa-chevron-left"></i> Android持久化存储学习
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-Content-Provider学习"><span class="nav-number">1.</span> <span class="nav-text">Android Content Provider学习</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面的絮叨"><span class="nav-number">1.1.</span> <span class="nav-text">写在前面的絮叨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-user-premession"><span class="nav-number">1.2.</span> <span class="nav-text">Android user-premession</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用存在的Content-Provider"><span class="nav-number">1.3.</span> <span class="nav-text">使用存在的Content Provider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自己创建一个Content-Provider"><span class="nav-number">1.4.</span> <span class="nav-text">自己创建一个Content Provider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Content-Provider-测试方法"><span class="nav-number">1.5.</span> <span class="nav-text">Content Provider 测试方法</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

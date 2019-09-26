@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Android Fragment学习和Activity漏洞点写在前面的絮叨Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。 本文仍然是参照《第一行代码》和dalao们的blog学习所得。 Fragm">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-Fragement学习">
+<meta property="og:url" content="http://N1rv0us@github.io/2019/09/25/Android-Fragement学习/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="Android Fragment学习和Activity漏洞点写在前面的絮叨Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。 本文仍然是参照《第一行代码》和dalao们的blog学习所得。 Fragm">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
+<meta property="og:updated_time" content="2019-09-25T07:29:12.882Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android-Fragement学习">
+<meta name="twitter:description" content="Android Fragment学习和Activity漏洞点写在前面的絮叨Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。 本文仍然是参照《第一行代码》和dalao们的blog学习所得。 Fragm">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2019/09/25/Android-Fragement学习/">
+
+
+
+
+
+  <title>Android-Fragement学习 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2019/09/25/Android-Fragement学习/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android-Fragement学习</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-25T01:18:20+08:00">
+                2019-09-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Android-Fragment学习和Activity漏洞点"><a href="#Android-Fragment学习和Activity漏洞点" class="headerlink" title="Android Fragment学习和Activity漏洞点"></a>Android Fragment学习和Activity漏洞点</h1><h2 id="写在前面的絮叨"><a href="#写在前面的絮叨" class="headerlink" title="写在前面的絮叨"></a>写在前面的絮叨</h2><p>Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。</p>
+<p>本文仍然是参照《第一行代码》和dalao们的blog学习所得。</p>
+<h2 id="Fragment介绍"><a href="#Fragment介绍" class="headerlink" title="Fragment介绍"></a>Fragment介绍</h2><p>在对Activity的学习过程中，可以知道其一共包括两大部分：负责界面展示的XML文件和负责整个界面功能实现的Activity.java文件。这种形式有一个小问题：想实现app在不同大小的屏幕中展示不同的内容就很困难。虽然控制layout重载能够控制不同的布局，但是仍然不能很好的解决这个问题。</p>
+<p>举个栗子：对于一个新闻APP，在如平板电脑上希望采用分屏的形式，一半是新闻标题，一半是具体内容；而对于手机中，这样的展示显得比较拥挤，希望能展示成一个页面是新闻，然后完成跳转的形式。这种实现就需要Fragment的帮助了。</p>
+<p>简单的，可以把Activity的xml布局当成一个画板，Fragment就是组成这个Activity的小模块，可以将许多Fragment拼凑在一个Activity中（对于我来说更方便的是把这个关系理解为线程。。）这样一来就可以方便Activity的布局和Fragment的代码重用。</p>
+<h2 id="Fragment创建与加载"><a href="#Fragment创建与加载" class="headerlink" title="Fragment创建与加载"></a>Fragment创建与加载</h2><h3 id="Fragment创建过程"><a href="#Fragment创建过程" class="headerlink" title="Fragment创建过程"></a>Fragment创建过程</h3><p>Fregment的创建需要手动创建一个java class和一个xml文件，其中xml文件就是一个简易的Activity XML实现简单的页面布局就好，java class中需要继承Fragment类（由于AndroidX已经不在支持<code>support-v7</code>可能引用的头文件有一点点不同，但是无伤大雅）。然后我们在<code>onCreateView</code>中加载页面布局，实现需要的功能即可，下面是栗子代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LeftFragment</span> <span class="keyword">extends</span> <span class="title">Fragment</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> View <span class="title">onCreateView</span><span class="params">(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        View view = inflater.inflate(R.layout.left_fragment,container,<span class="keyword">false</span>);</span><br><span class="line">        <span class="keyword">return</span> view;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Activity的加载"><a href="#Activity的加载" class="headerlink" title="Activity的加载"></a>Activity的加载</h3><p>已经编写好的Fragment就可以被Activity加载使用了，首先在Activity的XML文件中引入<code>fragment</code>标签，其中 “android:name”就是对应的Fragment的java class。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">fragment</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">"@+id/left_fragment"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">"com.example.fragmenttest.LeftFragment"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"0dp"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_weight</span>=<span class="string">"1"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在Activity java class的实现过程中，可以使用FragmentManager来管理和加载，简单写一个替换Fragment的函数，模版如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">replaceFragment</span><span class="params">(Fragment fragment)</span> </span>&#123;</span><br><span class="line">    FragmentManager fragmentManager = getSupportFragmentManager();</span><br><span class="line">    FragmentTransaction transaction = fragmentManager.beginTransaction();</span><br><span class="line">    transaction.replace(R.id.right_layout,fragment);</span><br><span class="line">    transaction.addToBackStack(<span class="keyword">null</span>);</span><br><span class="line">    transaction.commit();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>addToBackStack</code>的功能是将Fragment实现成为类似于Activity 中Back Stack的形式（否则被替换掉的Fragment会直接go die）</p>
+<h3 id="Fragment与Activity之间的通信"><a href="#Fragment与Activity之间的通信" class="headerlink" title="Fragment与Activity之间的通信"></a>Fragment与Activity之间的通信</h3><ul>
+<li>在Fragment中使用Activity功能：使用getActivity()</li>
+<li>在Activity中使用Fragment功能：使用getSupportFragmentManager中的findFragmentById,就比较类似于Button 的加载</li>
+</ul>
+<h2 id="Fragment的生存周期"><a href="#Fragment的生存周期" class="headerlink" title="Fragment的生存周期"></a>Fragment的生存周期</h2><p>生存状态（基本依赖于Activity）：</p>
+<ul>
+<li>运行态(Running)：Fragment可见，并且关联的Activity也处于运行态；</li>
+<li>暂停态(Pause)：所在的Activity处于暂停态；</li>
+<li>停止态(Stop)：所在的Activity停止，或是使用通过remove或是replace让fragment不在活跃于Activity中，但是处于Back Stack中；</li>
+<li>销毁态(Destroy)：所在的Activity销毁，或是使用通过remove或是replace让fragment不在活跃于Activity中，也没有处于Back Stack中；</li>
+</ul>
+<p>运行周期：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png" alt="EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6"></p>
+<h2 id="Activity常见的漏洞形式"><a href="#Activity常见的漏洞形式" class="headerlink" title="Activity常见的漏洞形式"></a>Activity常见的漏洞形式</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/24/云CTF中的android-web题目/" rel="next" title="云CTF中的android-web题目">
+                <i class="fa fa-chevron-left"></i> 云CTF中的android-web题目
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/25/Android-Broadcast学习/" rel="prev" title="Android-Broadcast学习">
+                Android-Broadcast学习 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-Fragment学习和Activity漏洞点"><span class="nav-number">1.</span> <span class="nav-text">Android Fragment学习和Activity漏洞点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面的絮叨"><span class="nav-number">1.1.</span> <span class="nav-text">写在前面的絮叨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment介绍"><span class="nav-number">1.2.</span> <span class="nav-text">Fragment介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment创建与加载"><span class="nav-number">1.3.</span> <span class="nav-text">Fragment创建与加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment创建过程"><span class="nav-number">1.3.1.</span> <span class="nav-text">Fragment创建过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Activity的加载"><span class="nav-number">1.3.2.</span> <span class="nav-text">Activity的加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment与Activity之间的通信"><span class="nav-number">1.3.3.</span> <span class="nav-text">Fragment与Activity之间的通信</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment的生存周期"><span class="nav-number">1.4.</span> <span class="nav-text">Fragment的生存周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity常见的漏洞形式"><span class="nav-number">1.5.</span> <span class="nav-text">Activity常见的漏洞形式</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
