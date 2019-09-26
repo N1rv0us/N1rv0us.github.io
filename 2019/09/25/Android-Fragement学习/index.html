@@ -87,12 +87,12 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="Android Fragment学习和Activity漏洞点写在前面的絮叨Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。 本文仍然是参照《第一行代码》和dalao们的blog学习所得。 Fragm">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
-<meta property="og:updated_time" content="2019-09-25T07:29:12.882Z">
+<meta property="og:image" content="http://N1rv0us@github.io/2019/09/25/Android-Fragement学习/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
+<meta property="og:updated_time" content="2019-09-26T09:05:30.089Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android-Fragement学习">
 <meta name="twitter:description" content="Android Fragment学习和Activity漏洞点写在前面的絮叨Fragment不算是Android的四大组件之一，感觉更像是衍生出来的一种轻量级的Activity。因为其存在的特殊性，我又是只学个皮毛就成，这里就直接讲Fragment和Activity放在一起整理了。总之他们虽然不是一个东西，但是胜似一个东西。 本文仍然是参照《第一行代码》和dalao们的blog学习所得。 Fragm">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
+<meta name="twitter:image" content="http://N1rv0us@github.io/2019/09/25/Android-Fragement学习/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png">
 
 
 
@@ -329,8 +329,22 @@
 <li>销毁态(Destroy)：所在的Activity销毁，或是使用通过remove或是replace让fragment不在活跃于Activity中，也没有处于Back Stack中；</li>
 </ul>
 <p>运行周期：</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png" alt="EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6"></p>
-<h2 id="Activity常见的漏洞形式"><a href="#Activity常见的漏洞形式" class="headerlink" title="Activity常见的漏洞形式"></a>Activity常见的漏洞形式</h2>
+<p><img src="Android-Fragement%E5%AD%A6%E4%B9%A0/EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6.png" alt="EACEEFB1-70D2-49EC-B714-CD1D0FCFA8F6"></p>
+<h2 id="Activity常见的测试方法"><a href="#Activity常见的测试方法" class="headerlink" title="Activity常见的测试方法"></a>Activity常见的测试方法</h2><ul>
+<li>app内使用的私有Activity不应配置intent-filter，如果配置了intent-filter需设置exported属性为false。</li>
+<li>使用默认taskAffinity</li>
+<li>使用默认launchMode</li>
+<li>启动Activity时不设置intent的FLAG_ACTIVITY_NEW_TASK标签</li>
+<li>谨慎处理接收的intent以及其携带的信息</li>
+<li>签名验证内部（in-house）app</li>
+<li>当Activity返回数据时候需注意目标Activity是否有泄露信息的风险</li>
+<li>目的Activity十分明确时使用显示启动</li>
+<li>谨慎处理Activity返回的数据，目的Activity返回的数据有可能是恶意应用伪造的</li>
+<li>验证目标Activity是否恶意app，以免受到intent欺骗，可用hash签名验证</li>
+<li>When Providing an Asset Secondhand, the Asset should be Protected with the Same Level of Protection</li>
+<li>尽可能的不发送敏感信息，应考虑到启动public Activity中intent的信息均有可能被恶意应用窃取的风险</li>
+</ul>
+
       
     </div>
     
@@ -497,7 +511,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-Fragment学习和Activity漏洞点"><span class="nav-number">1.</span> <span class="nav-text">Android Fragment学习和Activity漏洞点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面的絮叨"><span class="nav-number">1.1.</span> <span class="nav-text">写在前面的絮叨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment介绍"><span class="nav-number">1.2.</span> <span class="nav-text">Fragment介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment创建与加载"><span class="nav-number">1.3.</span> <span class="nav-text">Fragment创建与加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment创建过程"><span class="nav-number">1.3.1.</span> <span class="nav-text">Fragment创建过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Activity的加载"><span class="nav-number">1.3.2.</span> <span class="nav-text">Activity的加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment与Activity之间的通信"><span class="nav-number">1.3.3.</span> <span class="nav-text">Fragment与Activity之间的通信</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment的生存周期"><span class="nav-number">1.4.</span> <span class="nav-text">Fragment的生存周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity常见的漏洞形式"><span class="nav-number">1.5.</span> <span class="nav-text">Activity常见的漏洞形式</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Android-Fragment学习和Activity漏洞点"><span class="nav-number">1.</span> <span class="nav-text">Android Fragment学习和Activity漏洞点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在前面的絮叨"><span class="nav-number">1.1.</span> <span class="nav-text">写在前面的絮叨</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment介绍"><span class="nav-number">1.2.</span> <span class="nav-text">Fragment介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment创建与加载"><span class="nav-number">1.3.</span> <span class="nav-text">Fragment创建与加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment创建过程"><span class="nav-number">1.3.1.</span> <span class="nav-text">Fragment创建过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Activity的加载"><span class="nav-number">1.3.2.</span> <span class="nav-text">Activity的加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment与Activity之间的通信"><span class="nav-number">1.3.3.</span> <span class="nav-text">Fragment与Activity之间的通信</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fragment的生存周期"><span class="nav-number">1.4.</span> <span class="nav-text">Fragment的生存周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Activity常见的测试方法"><span class="nav-number">1.5.</span> <span class="nav-text">Activity常见的测试方法</span></a></li></ol></li></ol></div>
             
 
           </div>
