@@ -87,13 +87,13 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="ABSTRACT in my word越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台ETM(Embedded Trace Microcell) 的硬件特性以及Android 内核的eBPF来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。 传统的Android n">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png">
-<meta property="og:updated_time" content="2022-08-09T17:37:15.326Z">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/1c13384e8aa7263c4dd70b1a25fd1c0fdca034d5/2022/08/07/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/1c13384e8aa7263c4dd70b1a25fd1c0fdca034d5/2022/08/07/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png">
+<meta property="og:updated_time" content="2022-08-09T17:48:00.933Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="NCScope 论文阅读笔记">
 <meta name="twitter:description" content="ABSTRACT in my word越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台ETM(Embedded Trace Microcell) 的硬件特性以及Android 内核的eBPF来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。 传统的Android n">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
+<meta name="twitter:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/1c13384e8aa7263c4dd70b1a25fd1c0fdca034d5/2022/08/07/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
 
 
 
@@ -394,9 +394,9 @@
 <p><strong>4-5 data_flow恢复与漏洞检测</strong></p>
 <p>利用NCScope记录的运行时数据，驱动离线的符号执行可以恢复数据流以及检测一些UAF，double free等漏洞，其中，通过<code>eBPF</code> hook native code的初始化函数能够较好的构造符号执行环境；</p>
 <p><strong>4-2 检测root环境代码的检出方式</strong></p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png" alt="Screen Shot 2022-08-10 at 01.25.55.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/1c13384e8aa7263c4dd70b1a25fd1c0fdca034d5/2022/08/07/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png" alt="Screen Shot 2022-08-10 at 01.25.55.png"></p>
 <p><strong>4-3 Anti-Analysis的代码检出</strong></p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png" alt="b.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/1c13384e8aa7263c4dd70b1a25fd1c0fdca034d5/2022/08/07/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png" alt="b.png"></p>
 <h2 id="RELATED-WORK"><a href="#RELATED-WORK" class="headerlink" title="RELATED WORK"></a>RELATED WORK</h2><ul>
 <li><p>JN-SAF : statically analyze the native code to discover data leakage, command execution, and JNI reflection.</p>
 </li>
