@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android, paper,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="ABSTRACT in my word越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台ETM(Embedded Trace Microcell) 的硬件特性以及Android 内核的eBPF来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。 传统的Android n">
+<meta name="keywords" content="android, paper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NCScope 论文阅读笔记">
+<meta property="og:url" content="http://N1rv0us@github.io/2022/08/07/NCScope-论文笔记/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="ABSTRACT in my word越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台ETM(Embedded Trace Microcell) 的硬件特性以及Android 内核的eBPF来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。 传统的Android n">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png">
+<meta property="og:updated_time" content="2022-08-09T17:37:15.326Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="NCScope 论文阅读笔记">
+<meta name="twitter:description" content="ABSTRACT in my word越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台ETM(Embedded Trace Microcell) 的硬件特性以及Android 内核的eBPF来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。 传统的Android n">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2022/08/07/NCScope-论文笔记/">
+
+
+
+
+
+  <title>NCScope 论文阅读笔记 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2022/08/07/NCScope-论文笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">NCScope 论文阅读笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-08-07T21:27:27+08:00">
+                2022-08-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="ABSTRACT-in-my-word"><a href="#ABSTRACT-in-my-word" class="headerlink" title="ABSTRACT in my word"></a>ABSTRACT in my word</h2><p>越来越多的app使用native来实现一些核心的功能，虽然已经有一些针对Android Native代码的研究，但是覆盖率都不是很好。为了弥补这个不足，论文利用了ARM平台<code>ETM(Embedded Trace Microcell)</code> 的硬件特性以及Android 内核的<code>eBPF</code>来记录程序运行轨迹以及一些关键的内存数据，方便进行代码审计。</p>
+<p>传统的Android native分析需要依赖于Debugger, DBI 框架以及模拟器，然而这种分析方式存在难以解决的问题：</p>
+<ol>
+<li><p>运行在模拟器上的代码与真机上的代码存在差异，可能会产生漏报；</p>
+</li>
+<li><p>DBI框架会引入可识别的库/代码进入目标进程、模拟器会有一些与真机不同的配置文件；这些特征极易被<code>anti-analyze</code>识别；</p>
+</li>
+<li><p>DBI框架会导致程序运行开销变大，也很容易被识别到；</p>
+</li>
+</ol>
+<p>论文主要的贡献如下：</p>
+<ul>
+<li><p>提出了一种新型高效的分析框架<code>NCScope</code>, 而且代码开源：</p>
+</li>
+<li><p>为NCScope设计了新的方法来检测<code>self-protection</code>和<code>anti-analysis</code>方法，并通过从收集的指令轨迹和内存数据中恢复运行时的函数调用和数据流来诊断本地代码的内存损坏。</p>
+</li>
+</ul>
+<h2 id="Directory"><a href="#Directory" class="headerlink" title="Directory"></a>Directory</h2><ol start="2">
+<li><p>Background : 分章节介绍ETM机制以及eBPF机制；</p>
+</li>
+<li><p>Overview  of NCScope ： 整体介绍NCScope的架构；</p>
+<ol>
+<li><p>way to tracing instructions;</p>
+</li>
+<li><p>way to collect memory data;</p>
+</li>
+</ol>
+</li>
+<li><p>Analyze module of NCScope : 介绍目前NCScope目前具备的分析检测能力；</p>
+<ol>
+<li><p>Recovering Runtime Function Calls</p>
+</li>
+<li><p>Detecting Self-Protection Methods</p>
+</li>
+<li><p>Detecting Anti-Anaysis Mechanisms</p>
+</li>
+<li><p>Diagnosing Memory Corruption Bugs</p>
+</li>
+<li><p>Extending NCScope.</p>
+</li>
+</ol>
+</li>
+<li><p>EVALUATION : 一些测试数据结果展示，主要关注以下几个方面：</p>
+<ul>
+<li>How is the overhead incurred by NCScope?</li>
+</ul>
+<blockquote>
+<p>NCScope introduces very small additional overhead to the execution of app under analysis.</p>
+</blockquote>
+<ul>
+<li>How prevalent are self-protection behaviors implemented in native code of financial Android apps?</li>
+</ul>
+<blockquote>
+<p>NCScope can precisely identify the app’s selfprotection behaviors in native code. It finds that only 26.8% of the evaluated financial apps implement self-protection methods in native code, implying that their security is far from expected.</p>
+</blockquote>
+<ul>
+<li>How prevalent are anti-analysis behaviors implemented in native code of Android malware?</li>
+</ul>
+<blockquote>
+<p>NCScope can precisely identify anti-analysis behaviors in native code. It finds that at least 78.3% of the evaluated malware implements anti-analysis methods in native code.</p>
+</blockquote>
+<ul>
+<li>Can NCScope assist the diagnose of memory corruption bugs in the app’s native code?</li>
+</ul>
+<blockquote>
+<p>NCScope can aid memory corruption diagnosis by identifying use-after-free and double-free in native code</p>
+</blockquote>
+<ul>
+<li>Can NCScope assist the analysis on the performance of the app’s native code?</li>
+</ul>
+<blockquote>
+<p>NCScope can aid performance analysis on native code by collecting the accurate data with little noise.</p>
+</blockquote>
+</li>
+</ol>
+<h2 id="My-Key-Notes"><a href="#My-Key-Notes" class="headerlink" title="My Key Notes"></a>My Key Notes</h2><p><strong>3-2 内存数据的采集与存储</strong></p>
+<p>【采集过程 : Retrieving Memory Data】重点会关注一些关键的系统调用被触发时机的参数，由于大部分的参数都是指针；因此使用内核中的<code>PT_REGS_PARM*</code>宏来获取到base address然后再读取具体的参数内容；</p>
+<p>【数据存储 : Storing Memory Data】<code>eBPF</code>生产出来的数据会被存储在内核的虚拟内存中；由于大部分的系统调用都是通过一些基础的动态链接库来完成的，为避免非目标APP的调用产生无用的数据，<code>eBPF program</code>会利用记录调用的PID以保证仅记录目标APP的调用；为了能够后期判断调用的先后顺序，会给每次调用记录添加一个时间戳方便后续根据执行流在做分析。</p>
+<p><strong>4-1 恢复函数调用</strong></p>
+<ol>
+<li><p>首先构建从每个指令地址到相应系统函数的映射，以确定应用程序从追踪的指令流中调用的系统函数。</p>
+</li>
+<li><p>从构建的映射中，根据存储在ETM流中的地址元素找到应用程序所调用的系统功能</p>
+</li>
+<li><p>根据调用流程中是否带有<code>JNI_onLoad</code>等函数，可以判断调用来源是应用层或是native层</p>
+</li>
+</ol>
+<p>上述部分有详细的解析原理说明，详见论文</p>
+<p><strong>4-5 data_flow恢复与漏洞检测</strong></p>
+<p>利用NCScope记录的运行时数据，驱动离线的符号执行可以恢复数据流以及检测一些UAF，double free等漏洞，其中，通过<code>eBPF</code> hook native code的初始化函数能够较好的构造符号执行环境；</p>
+<p><strong>4-2 检测root环境代码的检出方式</strong></p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/a.png" alt="Screen Shot 2022-08-10 at 01.25.55.png"></p>
+<p><strong>4-3 Anti-Analysis的代码检出</strong></p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/NCScope-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/b.png" alt="b.png"></p>
+<h2 id="RELATED-WORK"><a href="#RELATED-WORK" class="headerlink" title="RELATED WORK"></a>RELATED WORK</h2><ul>
+<li><p>JN-SAF : statically analyze the native code to discover data leakage, command execution, and JNI reflection.</p>
+</li>
+<li><p>DroidScope [98], CopperDroid [87], AndroidPerf [92], NDroid [93], and others [54] are built upon QEMU</p>
+</li>
+<li><p>DroidTrace [99] and Malton [95] use ptrace and the DBI framework Valgrind [76], respectively, to analyze apps.</p>
+</li>
+<li><p>Ninja [77] and Happer [94] use ETM to trace apps and hardware breakpoints to retrieve memory data</p>
+</li>
+</ul>
+<h2 id="REFERENCE"><a href="#REFERENCE" class="headerlink" title="REFERENCE"></a>REFERENCE</h2><p>感谢G.O.S.S.I.P推荐的优秀论文，以及参与论文工作的各位老师</p>
+<ul>
+<li><p>公众号文章：<a href="https://mp.weixin.qq.com/s/LLjSMPromqnrGVvnGGUG4g" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/LLjSMPromqnrGVvnGGUG4g</a></p>
+</li>
+<li><p>论文地址：<a href="https://chapering.github.io/pubs/issta22hao.pdf" target="_blank" rel="noopener">https://chapering.github.io/pubs/issta22hao.pdf</a></p>
+</li>
+<li><p>代码地址：</p>
+<ul>
+<li><p><a href="https://github.com/moonZHH/NCScope" target="_blank" rel="noopener">https://github.com/moonZHH/NCScope</a></p>
+</li>
+<li><p><a href="https://doi.org/10.5281/zenodo.6534524" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.6534524</a>.</p>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android-paper/" rel="tag"># android, paper</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/08/03/Android-Native实现隐蔽采集数据/" rel="next" title="Android Native 实现隐蔽采集数据">
+                <i class="fa fa-chevron-left"></i> Android Native 实现隐蔽采集数据
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ABSTRACT-in-my-word"><span class="nav-number">1.</span> <span class="nav-text">ABSTRACT in my word</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Directory"><span class="nav-number">2.</span> <span class="nav-text">Directory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#My-Key-Notes"><span class="nav-number">3.</span> <span class="nav-text">My Key Notes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RELATED-WORK"><span class="nav-number">4.</span> <span class="nav-text">RELATED WORK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REFERENCE"><span class="nav-number">5.</span> <span class="nav-text">REFERENCE</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
