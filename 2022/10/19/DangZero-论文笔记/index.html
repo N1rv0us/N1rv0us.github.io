@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="paper,UAF dection,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="ABSTRACT in my wordUAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-">
+<meta name="keywords" content="paper,UAF dection">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DangZero 论文阅读笔记">
+<meta property="og:url" content="http://N1rv0us@github.io/2022/10/19/DangZero-论文笔记/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="ABSTRACT in my wordUAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png">
+<meta property="og:updated_time" content="2022-10-20T18:30:56.155Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DangZero 论文阅读笔记">
+<meta name="twitter:description" content="ABSTRACT in my wordUAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2022/10/19/DangZero-论文笔记/">
+
+
+
+
+
+  <title>DangZero 论文阅读笔记 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2022/10/19/DangZero-论文笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">DangZero 论文阅读笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-10-19T00:00:00+08:00">
+                2022-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="ABSTRACT-in-my-word"><a href="#ABSTRACT-in-my-word" class="headerlink" title="ABSTRACT in my word"></a>ABSTRACT in my word</h2><p>UAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-based solution通过Kernel Mode Linux在Ring 0权限下直接操作页表结果，实现高性能的UAF检测系统。</p>
+<h3 id="Contributions"><a href="#Contributions" class="headerlink" title="Contributions"></a>Contributions</h3><ul>
+<li><p>A new approach to detect use-after-free bugs based on alias allocation with virtualization-based direct page table access.</p>
+</li>
+<li><p>A novel solution for alias reclaiming.</p>
+</li>
+<li><p>A prototype of DangZero using KML as a privilege backend.</p>
+</li>
+<li><p>An evaluation to show that DangZero significantly outperforms prior detection systems and even state-of-the-art GCstyle protection systems on long-running benchmarks.</p>
+</li>
+</ul>
+<h3 id="Limitation"><a href="#Limitation" class="headerlink" title="Limitation"></a>Limitation</h3><ul>
+<li><p>该工具依赖Kernel-Mode-Linux完成功能扩展，因此无法在 &gt; v4.0版本的内核上使用；【貌似Github上已经有支持4.4版本的KML patch】</p>
+</li>
+<li><p>DangZero目前暂未做到Thread-safe；需要引入页表锁来实现线程安全；</p>
+</li>
+<li><p>对于依赖系统malloc或是mmap的程序使用会有一些难度；</p>
+</li>
+<li><p>过强的安全隔离机制会给进程间通信带来新的挑战；</p>
+</li>
+</ul>
+<h2 id="Directory"><a href="#Directory" class="headerlink" title="Directory"></a>Directory</h2><ul>
+<li><p>Background</p>
+<ul>
+<li><p>2.1 Use-after-Free :  简单介绍UAF漏洞</p>
+</li>
+<li><p>2.2 Page Tables :  简介内核对页表的管理模式</p>
+</li>
+<li><p>2.3 Access to privileged CPU features</p>
+</li>
+</ul>
+</li>
+<li><p>Threat Model</p>
+<ul>
+<li>假设攻击者准备利用progam中的利用UAF漏洞来完成信息泄漏/权限提升等目标；防御利用UAF完成的内存重用或是其他的利用技巧；但不会防御其他类型的攻击(如 buffer overflow).</li>
+</ul>
+</li>
+<li><p>DANGZERO [重点关注部分]</p>
+<ul>
+<li><p>Introducing the architecture of DangZero</p>
+</li>
+<li><p>4.1 Temporal safety through page protection</p>
+</li>
+<li><p>4.2 Creating and invalidating aliases</p>
+</li>
+<li><p>4.3 Alias reclaimer</p>
+</li>
+</ul>
+</li>
+<li><p>IMPLEMENTATION</p>
+<ul>
+<li><p>5.1 Privilege backend</p>
+</li>
+<li><p>5.2 Alias page tables</p>
+</li>
+<li><p>5.3 Supporting fork</p>
+</li>
+<li><p>5.4 Optimizing page entry lookups</p>
+</li>
+</ul>
+</li>
+<li><p>EVALUATION [篇幅很长，但是对我意义不是很大，跳过了]</p>
+</li>
+</ul>
+<h2 id="My-Key-Notes"><a href="#My-Key-Notes" class="headerlink" title="My Key Notes"></a>My Key Notes</h2><p><strong>2-2 PageTable</strong></p>
+<p>大多数64位架构使用 4级页表，每个页表由512个条目组成，产生48位（256TB）的虚拟地址空间。一个48位（256TB）的虚拟地址空间。</p>
+<p>当使用硬件虚拟化扩展运行虚拟机（VM）时，有两层页表：客户页表和主机上的扩展页表（EPT）。给客户带来直接在硬件上运行的错觉。EPT由管理程序管理，与普通的页表类似，只是它把每个客户的物理地址翻译成主机的物理地址。</p>
+<p><strong>Intro for DangZero</strong></p>
+<p>每当程序申请内存的时候，都会被分配到唯一虚拟地址，当内存被释放之后，唯一的虚拟地址索引会被无效化，通过在内存映射表中将该地址设置为invalid；但是物理内存地址仍然可以被重复使用。</p>
+<p>整体架构如下：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png" alt="structure.png"></p>
+<p><strong>4-1</strong></p>
+<p>DangZero builds on the idea of aliasing [18], where each object has its own virtual alias, but multiple objects share the same underlying physical page. Figure 2 visualizes how the different pages relate to each other. We refer to the virtual page returned by the default memory allocator as the canonical page. These pages can contain multiple memory objects by design (up to 128 objects on a 4K page). The physical page backing the canonical page matches the objects. Then, for each individual object, there is a distinct alias page, with the in-page offset matching the canonical page. If the original allocation spans multiple pages, the resulting object will have the same number of corresponding alias pages.</p>
+<p><strong>4-2</strong></p>
+<p>With DangZero, we can directly modify the page tables from our overlay allocator instead, completely outside of the control of the operating system. DangZero takes over an unused area of the virtual address space, that is never touched by the kernel, and directly writes into the page table page entries corresponding to that area. To facilitate this access to (normally) restricted resources, our privilege backend provides safe access. The design of DangZero is agnostic to the exact mechanism used, but in general it must support direct read and write access to page tables and allow for TLB flushing, while at the same time ensuring safety and isolation to the rest of the system. Our primary backend uses a guest running Kernel Mode Linux (KML) for transforming Linux into a libOS; </p>
+<h2 id="RELATED-WORK"><a href="#RELATED-WORK" class="headerlink" title="RELATED WORK"></a>RELATED WORK</h2><h3 id="Secure-Allocator"><a href="#Secure-Allocator" class="headerlink" title="Secure Allocator"></a>Secure Allocator</h3><p>通过“改良”内存分配的allocators可以在一定程度上实现缓解UAF问题；</p>
+<ul>
+<li><p>早起的解决方案，旨在通过引入随机化内存分配的方式，提高攻击者利用的难度；</p>
+</li>
+<li><p>Cling 以及 TAT通过在分配器中引入<code>type-safe</code> 机制，但是存在利用相同类型的object控制悬空指针的问题；</p>
+</li>
+<li><p>余下的方案大多数是利用GC机制来解决UAF的问题；但是可能会大大的降低性能；</p>
+</li>
+</ul>
+<h3 id="利用虚拟化技术实现安全隔离"><a href="#利用虚拟化技术实现安全隔离" class="headerlink" title="利用虚拟化技术实现安全隔离"></a>利用虚拟化技术实现安全隔离</h3><p>一些项目将虚拟化扩展用于安全域的隔离；本文主要受相关文章的启发，在unikernel-style模式下对应用程序执行特权指令；</p>
+<h2 id="REFERENCE"><a href="#REFERENCE" class="headerlink" title="REFERENCE"></a>REFERENCE</h2><p>感谢G.O.S.S.I.P公众号推荐的优秀论文</p>
+<ul>
+<li><p>公众号文章链接：<a href="https://mp.weixin.qq.com/s/bL8B7yhgmUvzjAveoD5YAw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/bL8B7yhgmUvzjAveoD5YAw</a></p>
+</li>
+<li><p>论文pdf地址：<a href="https://download.vusec.net/papers/dangzero_ccs22.pdf" target="_blank" rel="noopener">https://download.vusec.net/papers/dangzero_ccs22.pdf</a></p>
+</li>
+<li><p><a href="https://github.com/vusec/dangzero" target="_blank" rel="noopener">GitHub - vusec/dangzero</a></p>
+</li>
+<li><p><a href="http://www.yl.is.s.u-tokyo.ac.jp/~tosh/kml/" target="_blank" rel="noopener">KML document</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/paper/" rel="tag"># paper</a>
+          
+            <a href="/tags/UAF-dection/" rel="tag"># UAF dection</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/10/09/CVE-2019-2215复现与分析/" rel="next" title="CVE-2019-2215 漏洞复现与分析">
+                <i class="fa fa-chevron-left"></i> CVE-2019-2215 漏洞复现与分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ABSTRACT-in-my-word"><span class="nav-number">1.</span> <span class="nav-text">ABSTRACT in my word</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Contributions"><span class="nav-number">1.1.</span> <span class="nav-text">Contributions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Limitation"><span class="nav-number">1.2.</span> <span class="nav-text">Limitation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Directory"><span class="nav-number">2.</span> <span class="nav-text">Directory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#My-Key-Notes"><span class="nav-number">3.</span> <span class="nav-text">My Key Notes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RELATED-WORK"><span class="nav-number">4.</span> <span class="nav-text">RELATED WORK</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Secure-Allocator"><span class="nav-number">4.1.</span> <span class="nav-text">Secure Allocator</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#利用虚拟化技术实现安全隔离"><span class="nav-number">4.2.</span> <span class="nav-text">利用虚拟化技术实现安全隔离</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REFERENCE"><span class="nav-number">5.</span> <span class="nav-text">REFERENCE</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
