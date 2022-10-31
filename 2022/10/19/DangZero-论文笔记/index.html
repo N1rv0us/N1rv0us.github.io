@@ -87,12 +87,12 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="ABSTRACT in my wordUAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png">
-<meta property="og:updated_time" content="2022-10-20T18:30:56.155Z">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2022/10/19/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png?raw=true">
+<meta property="og:updated_time" content="2022-10-31T16:19:36.126Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DangZero 论文阅读笔记">
 <meta name="twitter:description" content="ABSTRACT in my wordUAF 作为一种典型的漏洞类型；能够在其被触发的时候就被检测到是十分有意义的。本文目标就是构建一套对于编译后的二进制执行程序的检测系统。一般该类型的系统是通过对每次allocate操作的创建一个别名的映射(alias-based solution)，并在其Free的时候清理相关的内存，但是由于频繁的用户态/内核态严重的影响了程序的性能；本文在传统的alias-">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png">
+<meta name="twitter:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2022/10/19/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png?raw=true">
 
 
 
@@ -372,7 +372,7 @@
 <p><strong>Intro for DangZero</strong></p>
 <p>每当程序申请内存的时候，都会被分配到唯一虚拟地址，当内存被释放之后，唯一的虚拟地址索引会被无效化，通过在内存映射表中将该地址设置为invalid；但是物理内存地址仍然可以被重复使用。</p>
 <p>整体架构如下：</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png" alt="structure.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2022/10/19/DangZero-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/structure.png?raw=true" alt="structure.png"></p>
 <p><strong>4-1</strong></p>
 <p>DangZero builds on the idea of aliasing [18], where each object has its own virtual alias, but multiple objects share the same underlying physical page. Figure 2 visualizes how the different pages relate to each other. We refer to the virtual page returned by the default memory allocator as the canonical page. These pages can contain multiple memory objects by design (up to 128 objects on a 4K page). The physical page backing the canonical page matches the objects. Then, for each individual object, there is a distinct alias page, with the in-page offset matching the canonical page. If the original allocation spans multiple pages, the resulting object will have the same number of corresponding alias pages.</p>
 <p><strong>4-2</strong></p>
