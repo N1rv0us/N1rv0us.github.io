@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android,parcel,bundle mismatch,framework,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Brief在Android系统中Parcel对象是一个非常常用的进程间消息传递的载体。由于该结构原本并没有一些内容的完整性校验，这导致了发送者所发送的数据与接收者所接受的数据可能并不相同。从这一漏洞点出发，攻击者不断开发出了如Bundle fengshui等多种利用方案； 在去年的BlackHat EU中，Google 宣布在Android 13中引入了全新安全的Parcel机制。针对Parcel">
+<meta name="keywords" content="android,parcel,bundle mismatch,framework">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Parcel 系列系列漏洞整理 (一)">
+<meta property="og:url" content="http://N1rv0us@github.io/2023/01/30/Android-Parcel-漏洞整理-一/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="Brief在Android系统中Parcel对象是一个非常常用的进程间消息传递的载体。由于该结构原本并没有一些内容的完整性校验，这导致了发送者所发送的数据与接收者所接受的数据可能并不相同。从这一漏洞点出发，攻击者不断开发出了如Bundle fengshui等多种利用方案； 在去年的BlackHat EU中，Google 宣布在Android 13中引入了全新安全的Parcel机制。针对Parcel">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-1.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-2.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-3.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-4.png">
+<meta property="og:updated_time" content="2023-02-13T18:37:06.147Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Parcel 系列系列漏洞整理 (一)">
+<meta name="twitter:description" content="Brief在Android系统中Parcel对象是一个非常常用的进程间消息传递的载体。由于该结构原本并没有一些内容的完整性校验，这导致了发送者所发送的数据与接收者所接受的数据可能并不相同。从这一漏洞点出发，攻击者不断开发出了如Bundle fengshui等多种利用方案； 在去年的BlackHat EU中，Google 宣布在Android 13中引入了全新安全的Parcel机制。针对Parcel">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2023/01/30/Android-Parcel-漏洞整理-一/">
+
+
+
+
+
+  <title>Android Parcel 系列系列漏洞整理 (一) | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2023/01/30/Android-Parcel-漏洞整理-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android Parcel 系列系列漏洞整理 (一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-01-30T00:00:00+08:00">
+                2023-01-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Brief"><a href="#Brief" class="headerlink" title="Brief"></a>Brief</h2><p>在Android系统中Parcel对象是一个非常常用的进程间消息传递的载体。由于该结构原本并没有一些内容的完整性校验，这导致了发送者所发送的数据与接收者所接受的数据可能并不相同。从这一漏洞点出发，攻击者不断开发出了如Bundle fengshui等多种利用方案；</p>
+<p>在去年的BlackHat EU中，Google 宣布在Android 13中引入了全新安全的Parcel机制。针对Parcel传输数据中存在的问题作出了改进，封堵了大部分对Parcel Mismatch利用的场景；</p>
+<p>笔者从2022年初才开始关注Parcel Mismatch的问题，但是由于拖延症直到最近<code>michalbednarski</code> 爆出在Android 13上的<code>LazyValue</code> 才正式开始梳理相关的漏洞原理，利用场景以及Google的修复方案。主要整合了michalbednarski在其Github上公布的PoC以及BlackHat EU上的slide，希望能对相关漏洞的挖掘有些启示。(如果想深入研究建议还是要看一下相关的代码以及PoC)</p>
+<p>为方便观看，整个Parcel Mismatch的问题将被分为三个部分：</p>
+<ul>
+<li><p>第一部分(本篇) : 介绍Bundle Mismatch的原理，利用以及Android 13中的修复方案</p>
+</li>
+<li><p>第二部分：介绍ReparcelBug 2的利用链以及在Android 13的修复方案部分</p>
+</li>
+<li><p>第三部分： 介绍LazyValue的漏洞原理以及利用方式，并总结下未来Parcel Mismatch漏洞的生存问题；</p>
+</li>
+</ul>
+<h2 id="关于Parcel的一些基础知识"><a href="#关于Parcel的一些基础知识" class="headerlink" title="关于Parcel的一些基础知识"></a>关于Parcel的一些基础知识</h2><p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-1.png" alt="image-1.png"></p>
+<p>Parcel可以将Int, String等基础类型以及可序列化的对象(继承自<code>andrid.os.Parcel</code>)打包起来在sender与recevier之间传递。</p>
+<p>发送者(sender)通过对象中的<code>writeToParcel</code>方法将对象存入Parcel中，接受者收到Parcel之后，通过<code>createFromParcel</code>中反序列化出对应的原始对象。当Android开发者创建一个可序列化的对象时候，必须要实现其中的<code>writeToParcel</code>方法以及<code>createFromParcel</code>方法。这里就存在一个风险，即通过<code>writeToParcel</code>方法向Parcel中写入的内容与通过<code>createFromParcel</code> 方法读取到的内容可能是不一致的，从而导致接受着(receiver)接受到了完全不一样的内容。在攻击者的巧妙布局下，可以触发许多严重的安全漏洞。</p>
+<p>举个例子，在 <a href="https://source.android.com/security/bulletin/2017-10-01#framework" target="_blank" rel="noopener">CVE-2017-0806</a> 的修复patch中，可以看在<code>writeToParcel</code>过程中如果<code>mPayload == null</code>时不会向Parcel中写入内容(包括mPayload.size)，但是<code>createFromParcel</code> 仍然会通过<code>int size = source.readInt()</code>来从Parcel中读取一个size，这就导致了Parcel读写不一致的问题。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> GateKeeperResponse <span class="title">createFromParcel</span><span class="params">(Parcel source)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> responseCode = source.readInt();</span><br><span class="line">    <span class="keyword">final</span> GateKeeperResponse response;</span><br><span class="line">    <span class="keyword">if</span> (responseCode == RESPONSE_RETRY) &#123;</span><br><span class="line">        response = createRetryResponse(source.readInt());</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (responseCode == RESPONSE_OK) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">boolean</span> shouldReEnroll = source.readInt() == <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">byte</span>[] payload = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">int</span> size = source.readInt();</span><br><span class="line">        <span class="keyword">if</span> (size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            payload = <span class="keyword">new</span> <span class="keyword">byte</span>[size];</span><br><span class="line">            source.readByteArray(payload);</span><br><span class="line">        &#125;</span><br><span class="line">        response = createOkResponse(payload, shouldReEnroll);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        response = createGenericResponse(responseCode);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> response;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeToParcel</span><span class="params">(Parcel dest, <span class="keyword">int</span> flags)</span> </span>&#123;</span><br><span class="line">    dest.writeInt(mResponseCode);</span><br><span class="line">    <span class="keyword">if</span> (mResponseCode == RESPONSE_RETRY) &#123;</span><br><span class="line">        dest.writeInt(mTimeout);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mResponseCode == RESPONSE_OK) &#123;</span><br><span class="line">        dest.writeInt(mShouldReEnroll ? <span class="number">1</span> : <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (mPayload != <span class="keyword">null</span>) &#123;</span><br><span class="line">            dest.writeInt(mPayload.length);</span><br><span class="line">            dest.writeByteArray(mPayload);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>攻击者可以自由布局Parcel的另一个关键点是，Parcel对于如List等数据的处理，由于Java Type Erasure机制的存在，攻击者可以向一个可序列化对象的某个参与序列化的List变量中，写入一个与之List声明类型完全不匹配的对象进去，再其反序列化时仍然不受任何影响。在攻击者进行布局时，也可以利用这个特性来一些序列化的对象进去(这段描述可能有些抽象，但是配合下篇文章中的例子一起，就会容易理解一些)。</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-2.png" alt="image-2.png"></p>
+<p>到此为止，就完成了对Parcel Mismatch部分的解读，然而让这种不匹配完全转化成一个有价值的安全漏洞就需要配合Android Framework中的一些关键流程，后面会介绍几种常见的套路。更多有价值的利用链有待于安全研究员们继续不断的探索喽。</p>
+<h2 id="Bundle-FengShui"><a href="#Bundle-FengShui" class="headerlink" title="Bundle FengShui"></a>Bundle FengShui</h2><p>这是一种非常典型的利用场景，一般攻击者会配合AccountManagerService中一个已经修复过的<a href="https://blogs.360.cn/post/launchanywhere-google-bug-7699048.html" target="_blank" rel="noopener">LaunchAnywhere漏洞</a> </p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-3.png" alt="image-3.png"></p>
+<p>在这个流程中：</p>
+<ul>
+<li><p>Attacker APP : 发起AddAccount请求</p>
+</li>
+<li><p>system_server : 负责检查 <code>KEY_INTENT</code> 中是否包含恶意的信息</p>
+</li>
+<li><p>Settings APP :  提取Bundle中的<code>KEY_INTENT</code>字段，并执行startActivity</p>
+</li>
+</ul>
+<p>在上面的传递过程中, 利用 Parcel Mismatch 的漏洞，令<code>AccountManagerService</code> 获取到的<code>KEY_INTENT</code>与 <code>Settings APP</code> 获取到的 <code>KEY_INTENT</code> 为不同内容，可以做到利用<code>Settings APP</code> 的LaunchAnywhere.</p>
+<p>编写exploit时，需要根据Parcel Mismatch漏洞具体的读写差异调整对Bundle的布局，情况太多以后有机会单独写一篇BLOG整理一下。而在michalbednarski的ReparcelBug项目中整理了Bundle key替换的类 <code>Ambiguator</code> 其中的设计非常的巧妙，仅需少量的修改以及测试就可以完成一个全新的Parcel Mismatch exploit的编写；在heeen的Bundle Fengshui的文章中也展示了一些对Bundle布局的思路。</p>
+<p>在这里的<code>addAccount</code>流程仅是Bundle Fengshui的一个例子，如果尝试以更加抽象一点的语言总结Bundle Fengshui的利用应该是这样的：如果在一段代码逻辑中，存在攻击者(Attacker), 对Bundle内容的检查者(Checker)以及实际执行代码者(Executor)；Attacker向Checker发送一个Bundle，Checker检查完Bundle中的内容之后将其序列化后传递给Executor执行；那么Attacker可以利用一些存在Parcel Mismatch来调整Bundle中的布局让Checker与Executor尝试从Bundle中读取某个相同的KEY时，读取到完全不同的内容，进而绕过Checker对于Bundle内容的检查。</p>
+<h2 id="Lazy-Bundle-in-Android-13"><a href="#Lazy-Bundle-in-Android-13" class="headerlink" title="Lazy Bundle in Android 13"></a>Lazy Bundle in Android 13</h2><p>为了更加有效的解决Bundle Fengshui类型的利用方式，在 Android 13中通过调整了Parcel中数据的布局引入了Lazy Bundle机制，Google的工程师对该功能是这样描述的：</p>
+<blockquote>
+<p>So, there are basically 3 states:</p>
+<ol>
+<li>We received the bundle but haven’t queried anything about it (not<br>even isEmpty()): in this case the original parcel is held inside and<br>we haven’t attempted any deserialization (except for the metadata at<br>the beginning such as the magic, etc)</li>
+<li>We queried something on it (eg. isEmpty()): Now we deserialize the<br>bundle skipping the custom values above (we’re able to do this now<br>with the length written on the wire) and instead placing LazyValue<br>objects for them in the map.</li>
+<li>We query one of the lazy values: Now, we deserialize the object<br>represented by LazyValue and replace it on the map.</li>
+</ol>
+</blockquote>
+<p>从宏观的角度，可以通过下面这张图片来理解：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%B8%80/image-4.png" alt="image-4.png"></p>
+<p>通过LazyBundle的机制，不再需要将整个Bundle对象反序列化并将内容存入Map中读取，调用<code>bundle.get*()</code>方法可以独立的在Parcel中读取<code>Key-Value</code> 值。这样做一方面可以减少Bundle中某些<code>Key-Value</code>解析异常导致的程序崩溃，另一方面也意味着序列化存入Parcel后的每个<code>Key-Value</code>对都会有独立的存储区域，不会再由于某些对象的解析Mismatch而导致后续解析异常问题(例如前面提到的Bundle Fengshui)。</p>
+<p>从代码的角度来看，将Bundle中的每个<code>Key-Value</code>对中的Value以LazyValue的形式存入Parcel中，这也是Android 13中引入的一种新的机制，代码中有如下的说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">                     |   4B   |   4B   |</span><br><span class="line">mSource = Parcel&#123;... |  type  | length | object | ...&#125;</span><br><span class="line">                     a        b        c        d</span><br><span class="line">length = d - c</span><br><span class="line">mPosition = a</span><br><span class="line">mLength = d - a</span><br></pre></td></tr></table></figure>
+
+<p>由于对每个LazyValue对象都有类型和长度的标注，则即使<code>object</code> 部分解析异常，通过对length类型的检查也能够解释的发现，通过抛出异常来阻止一些漏洞的利用。</p>
+<h2 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h2><p>Android 13 通过引入LazyValue机制虽然可以有效的解决Bundle Fengshui的问题，但是个人认为Bundle Fengshui仍然是一个很有趣的研究方向，一方面Android 13的普及仍需要一段时间，但是仍会有大量的Mismatch Parcel对象被找出来，这些对象仍然可以被利用来攻击很多的手机系统。另一方面，Android中必然会有许多符合Bundle Fengshui的其他利用场景存在，更多的利用方案配合不同的Bundle布局也会是个很不错的挑战。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><p><a href="https://github.com/michalbednarski/IntentsLab/issues/2#issuecomment-344365482" target="_blank" rel="noopener">Could you give me your email address? · Issue #2 · michalbednarski/IntentsLab · GitHub</a></p>
+</li>
+<li><p><a href="https://github.com/michalbednarski/ReparcelBug2" target="_blank" rel="noopener">GitHub - michalbednarski/ReparcelBug2</a></p>
+</li>
+<li><p><a href="https://github.com/michalbednarski/LeakValue" target="_blank" rel="noopener">GitHub - michalbednarski/LeakValue: Exploit for CVE-2022-20452, privilege escalation on Android from installed app to system app (or another app) via LazyValue using Parcel after recycle()</a></p>
+</li>
+<li><p><a href="https://i.blackhat.com/EU-22/Wednesday-Briefings/EU-22-Ke-Android-Parcels-Introducing-Android-Safer-Parcel.pdf" target="_blank" rel="noopener">https://i.blackhat.com/EU-22/Wednesday-Briefings/EU-22-Ke-Android-Parcels-Introducing-Android-Safer-Parcel.pdf</a></p>
+</li>
+<li><p><a href="https://wrlus.com/android-security/bundle-mismatch/" target="_blank" rel="noopener">https://wrlus.com/android-security/bundle-mismatch/</a></p>
+</li>
+<li><p><a href="https://xz.aliyun.com/t/2364" target="_blank" rel="noopener">Bundle FengShui</a></p>
+<p><a href="https://android.googlesource.com/platform/frameworks/base/+/9ca6a5e21a1987fd3800a899c1384b22d23b6dee%5E%21/" target="_blank" rel="noopener">Introduce to Lazy Bundle</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+            <a href="/tags/parcel/" rel="tag"># parcel</a>
+          
+            <a href="/tags/bundle-mismatch/" rel="tag"># bundle mismatch</a>
+          
+            <a href="/tags/framework/" rel="tag"># framework</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/12/07/DirtyCred-论文笔记/" rel="next" title="DirtyCred 论文阅读笔记">
+                <i class="fa fa-chevron-left"></i> DirtyCred 论文阅读笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Brief"><span class="nav-number">1.</span> <span class="nav-text">Brief</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于Parcel的一些基础知识"><span class="nav-number">2.</span> <span class="nav-text">关于Parcel的一些基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bundle-FengShui"><span class="nav-number">3.</span> <span class="nav-text">Bundle FengShui</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lazy-Bundle-in-Android-13"><span class="nav-number">4.</span> <span class="nav-text">Lazy Bundle in Android 13</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Insight"><span class="nav-number">5.</span> <span class="nav-text">Insight</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

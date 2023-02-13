@@ -87,14 +87,14 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="ABSTRACT in my wordContributions 提出了一种新的，通用的exploitation方法DirtyCred ，能够绕过先行的大部分内核环节策略完成提权利用；  使用了一系列典型的Linux内核漏洞进行验证，证明了DirtyCred可以适用于大部分漏洞；  提出了将特权进程的credentials 与一般进程存储在不同的区域的缓解策略，并进行测试发现产生的overhead">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-2.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-3.png">
-<meta property="og:updated_time" content="2023-01-11T12:31:30.086Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-3.png">
+<meta property="og:updated_time" content="2023-01-30T11:50:48.167Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="DirtyCred 论文阅读笔记">
 <meta name="twitter:description" content="ABSTRACT in my wordContributions 提出了一种新的，通用的exploitation方法DirtyCred ，能够绕过先行的大部分内核环节策略完成提权利用；  使用了一系列典型的Linux内核漏洞进行验证，证明了DirtyCred可以适用于大部分漏洞；  提出了将特权进程的credentials 与一般进程存储在不同的区域的缓解策略，并进行测试发现产生的overhead">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png">
 
 
 
@@ -352,7 +352,7 @@
 </ul>
 <p><strong>3.1 以CVE-2021-4154为例介绍工作流程</strong></p>
 <p>首先，CVE-2021-4154可以让Linux内核直接释放一个仍然可能被使用的File对象. 漏洞利用流程图如下：</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png" alt="Figure-1.png"></p>
+<p><img src="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-1.png" alt="Figure-1.png"></p>
 <p>按照顺序：</p>
 <ol>
 <li><p>DirtyCred 进程打开一个可写文件(如<code>/tmp/x</code>), 并尝试向其中写入内容，内核会首先检查文件是否有写权限以及当前文件位置是否允许被写入；</p>
@@ -366,9 +366,9 @@
 </ol>
 <p><strong>4-1 Pivoting OOB</strong></p>
 <p>选取一个包含<code>credential</code>索引指针的的受害对象，让其分配到漏洞对象的后面，通过触发漏洞去劫持,  并通过将最后的4个byte设置为0，来将该指针劫持到<code>credential</code> 对象所在页表的起始位置。同时，认为被劫持的指针随着受害对象的释放而释放；</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-2.png" alt="Figure-2.png"></p>
+<p><img src="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-2.png" alt="Figure-2.png"></p>
 <p><strong>4-2 Pivoting DoubleFree</strong></p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-3.png" alt="Figure-3.png"></p>
+<p><img src="https://raw.githubusercontent.com/N1rv0us/N1rv0us.github.io/master/2022/12/07/DirtyCred-%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/Figure-3.png" alt="Figure-3.png"></p>
 <p>将double free转化成DirtyCred可以利用的形式相对比较复杂，总结来说需要解决如下的问题：</p>
 <ul>
 <li><p>由于cache分离的机制，用于double free的对象通常并不是credential object；</p>
@@ -452,6 +452,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2023/01/30/Android-Parcel-漏洞整理-一/" rel="prev" title="Android Parcel 系列系列漏洞整理 (一)">
+                Android Parcel 系列系列漏洞整理 (一) <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -527,7 +531,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -540,7 +544,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">tags</span>
                 
               </div>
