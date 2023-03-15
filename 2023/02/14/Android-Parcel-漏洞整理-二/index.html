@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android,parcel,bundle mismatch,framework,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Brief在上一篇BLOG中, 讨论了Parcel Mismatch系列漏洞的产生原理，并解读了其中一种典型的利用场景 self-changing Bundle 的利用流程以及Android 13中的缓解方案。在这种攻击模型中攻击者可以控制Bundle对象中读取到的内容，但是想要完成如LaunchAnyWhere的实际攻击效果，仍需要配合system_app/Framework中其他的正常功能逻辑">
+<meta name="keywords" content="android,parcel,bundle mismatch,framework">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Parcel Mismatch系列漏洞整理（二）">
+<meta property="og:url" content="http://N1rv0us@github.io/2023/02/14/Android-Parcel-漏洞整理-二/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="Brief在上一篇BLOG中, 讨论了Parcel Mismatch系列漏洞的产生原理，并解读了其中一种典型的利用场景 self-changing Bundle 的利用流程以及Android 13中的缓解方案。在这种攻击模型中攻击者可以控制Bundle对象中读取到的内容，但是想要完成如LaunchAnyWhere的实际攻击效果，仍需要配合system_app/Framework中其他的正常功能逻辑">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-1.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-2.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-3.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-4.png">
+<meta property="og:updated_time" content="2023-03-15T18:29:55.739Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Parcel Mismatch系列漏洞整理（二）">
+<meta name="twitter:description" content="Brief在上一篇BLOG中, 讨论了Parcel Mismatch系列漏洞的产生原理，并解读了其中一种典型的利用场景 self-changing Bundle 的利用流程以及Android 13中的缓解方案。在这种攻击模型中攻击者可以控制Bundle对象中读取到的内容，但是想要完成如LaunchAnyWhere的实际攻击效果，仍需要配合system_app/Framework中其他的正常功能逻辑">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2023/02/14/Android-Parcel-漏洞整理-二/">
+
+
+
+
+
+  <title>Android Parcel Mismatch系列漏洞整理（二） | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2023/02/14/Android-Parcel-漏洞整理-二/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android Parcel Mismatch系列漏洞整理（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-02-14T00:00:00+08:00">
+                2023-02-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Brief"><a href="#Brief" class="headerlink" title="Brief"></a>Brief</h2><p>在上一篇BLOG中, 讨论了Parcel Mismatch系列漏洞的产生原理，并解读了其中一种典型的利用场景 <code>self-changing Bundle</code> 的利用流程以及Android 13中的缓解方案。在这种攻击模型中攻击者可以控制<code>Bundle</code>对象中读取到的内容，但是想要完成如LaunchAnyWhere的实际攻击效果，仍需要配合system_app/Framework中其他的正常功能逻辑。</p>
+<p>而michalbednarski在21年初公开了一种全新的攻击模型：利用Parcel Mismatch来劫持四大组件启动流程中的关键参数，向任意一个APP中注入攻击者的dex，达到提权效果以及任意代码执行。</p>
+<p>在Android 13的Safer Parcel改造中，同样对这种攻击模型发布了对应的漏洞缓解方案。在Android 13之后的系统中，这种攻击模型同样很难再生效。</p>
+<p>下面的篇幅将通过michalbednarski/ReparcelBug2来详细解读这种攻击模型，想要深入理解，建议看下Github上这个项目的README。</p>
+<h3 id="复现环境的搭建"><a href="#复现环境的搭建" class="headerlink" title="复现环境的搭建"></a>复现环境的搭建</h3><p>由于该漏洞是在Android 12 Developer Preview 3版本是上被发现的，并在Android 12 release中就已经完成了修复，因此搭建漏洞环境也花了一些精力。下面是一个可以用于漏洞复现的Pixel 3XL ROM</p>
+<blockquote>
+<p><a href="https://dl.google.com/developers/android/sc/images/factory/crosshatch-spp3.210325.010-factory-3f4a9d89.zip" target="_blank" rel="noopener">https://dl.google.com/developers/android/sc/images/factory/crosshatch-spp3.210325.010-factory-3f4a9d89.zip</a></p>
+</blockquote>
+<p>笔者实测可以配合ReparcelBug2来完成system任意命令执行，但是需要重新简单调整下Parcel的布局。</p>
+<h2 id="攻击流程及原理"><a href="#攻击流程及原理" class="headerlink" title="攻击流程及原理"></a>攻击流程及原理</h2><h3 id="Broadcast-Receiver-组件启动流程与劫持"><a href="#Broadcast-Receiver-组件启动流程与劫持" class="headerlink" title="Broadcast Receiver 组件启动流程与劫持"></a>Broadcast Receiver 组件启动流程与劫持</h3><p>BroadcastReceiver (广播接收器) 是Android APP的四大组件之一，APP可以通过在AndroidManifest.xml文件中添加一条<code>&lt;receiver&gt;</code>的声明来完成组件的声明，其他APP通过构造一个Intent并通过<code>sendBroadcast</code> 方法即可访问到目标BroadcastReceiver。以上属于是Android开发者最基础的知识了，下面要重点关注 <code>system_server</code>具体是如何拉起一个BroadcastReceiver组件的。</p>
+<p><code>system_server</code>会通过Intent中的Action等信息找到对应进程的<code>ApplicationThread</code> 并调用其 <code>scheduleReceiver</code> 方法，跨进程通信的部分当然是通过Binder来完成的，下面是方法的实现代码以及在Binder中传输的代码部分：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.app.ActivityThread$ApplicationThread</span></span><br><span class="line"><span class="meta">@Override</span> <span class="comment">// android.app.IApplicationThread</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">scheduleReceiver</span><span class="params">(Intent intent, ActivityInfo info, CompatibilityInfo compatInfo, <span class="keyword">int</span> resultCode, String data, Bundle extras, <span class="keyword">boolean</span> sync, <span class="keyword">int</span> sendingUser, <span class="keyword">int</span> processState)</span> </span>&#123;</span><br><span class="line">    ActivityThread.<span class="keyword">this</span>.updateProcessState(processState, <span class="keyword">false</span>);</span><br><span class="line">    ReceiverData r = <span class="keyword">new</span> ReceiverData(intent, resultCode, data, extras, sync, <span class="keyword">false</span>, ActivityThread.<span class="keyword">this</span>.mAppThread.asBinder(), sendingUser);</span><br><span class="line">    r.info = info; <span class="comment">// this </span></span><br><span class="line">    r.compatInfo = compatInfo;</span><br><span class="line">    ActivityThread.<span class="keyword">this</span>.sendMessage(<span class="number">113</span>, r);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// android.app.IApplicationThread.Stub.onTransact(...)</span></span><br><span class="line">            <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">                    data.enforceInterface(DESCRIPTOR);</span><br><span class="line">                    <span class="keyword">if</span> (data.readInt() != <span class="number">0</span>) &#123;</span><br><span class="line">                        _arg0 = Intent.CREATOR.createFromParcel(data);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        _arg0 = <span class="keyword">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (data.readInt() != <span class="number">0</span>) &#123;</span><br><span class="line">                        _arg1 = ActivityInfo.CREATOR.createFromParcel(data);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        _arg1 = <span class="keyword">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (data.readInt() != <span class="number">0</span>) &#123;</span><br><span class="line">                        _arg2 = CompatibilityInfo.CREATOR.createFromParcel(data);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        _arg2 = <span class="keyword">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">int</span> _arg35 = data.readInt();</span><br><span class="line">                    String _arg46 = data.readString();</span><br><span class="line">                    <span class="keyword">if</span> (data.readInt() != <span class="number">0</span>) &#123;</span><br><span class="line">                        _arg5 = Bundle.CREATOR.createFromParcel(data);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        _arg5 = <span class="keyword">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    scheduleReceiver(_arg0, _arg1, _arg2, _arg35, _arg46, _arg5, data.readInt() != <span class="number">0</span>, data.readInt(), data.readInt());</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br></pre></td></tr></table></figure>
+
+<p>首先，关注下跨进程调用<code>onTranscat</code>方法处理过程，需要跨进程传递的参数都会被放到同一个Parcel对象中，按顺序依次读取(使用AIDL自动生成的一般都会是按顺序的)，解析完成后再去调用对应的方法，这并不是针对<code>scheduleRecevier</code> 是这样处理的，实际上绝大多数的Binder调用都是如此。</p>
+<p>scheduleReceiver的处理流程中，我们要额外关注传入的ActivityInfo参数的作用。其首先是被赋值给了<code>ReceiverData.info</code>，并通过Handler转发到了<code>ActivityThread.handleReceiver</code>方法处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.app.ActivityThread.handleReceiver(...)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleReceiver</span><span class="params">(ReceiverData data)</span> </span>&#123;</span><br><span class="line">    unscheduleGcIdler();</span><br><span class="line">    String component = data.intent.getComponent().getClassName();</span><br><span class="line">    LoadedApk packageInfo = getPackageInfoNoCheck(data.info.applicationInfo, data.compatInfo);</span><br><span class="line">    IActivityManager mgr = ActivityManager.getService();</span><br><span class="line">    ...</span><br><span class="line">    BroadcastReceiver receiver = packageInfo.getAppFactory().instantiateReceiver(cl, data.info.name, data.intent);</span><br><span class="line">    ...</span><br><span class="line">    receiver.onReceive(context.getReceiverRestrictedContext(), data.intent);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用<code>getPackageInfoNoCheck</code>方法拿到packageInfo，并在其中获取到需要拉起的receiver对象调用其<code>onReceive</code>方法来完成BroadcastReceiver组件的启动，下面继续深入看下packageInfo对象的获取过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> LoadedApk <span class="title">getPackageInfoNoCheck</span><span class="params">(ApplicationInfo ai, CompatibilityInfo compatInfo)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getPackageInfo(ai, compatInfo, <span class="keyword">null</span>, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> LoadedApk <span class="title">getPackageInfo</span><span class="params">(ApplicationInfo aInfo, CompatibilityInfo compatInfo, ClassLoader baseLoader, <span class="keyword">boolean</span> securityViolation, <span class="keyword">boolean</span> includeCode, <span class="keyword">boolean</span> registerPackage)</span> </span>&#123;</span><br><span class="line">    WeakReference&lt;LoadedApk&gt; ref;</span><br><span class="line">    <span class="keyword">boolean</span> differentUser = UserHandle.myUserId() != UserHandle.getUserId(aInfo.uid);</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.mResourcesManager) &#123;</span><br><span class="line">        ...</span><br><span class="line">        LoadedApk packageInfo = ref != <span class="keyword">null</span> ? ref.get() : <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span> (packageInfo != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!isLoadedApkResourceDirsUpToDate(packageInfo, aInfo)) &#123;</span><br><span class="line">                List&lt;String&gt; oldPaths = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                LoadedApk.makePaths(<span class="keyword">this</span>, aInfo, oldPaths);</span><br><span class="line">                packageInfo.updateApplicationInfo(aInfo, oldPaths);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> packageInfo;</span><br><span class="line">        &#125;</span><br><span class="line">        LoadedApk packageInfo2 = <span class="keyword">new</span> LoadedApk(<span class="keyword">this</span>, aInfo, compatInfo, baseLoader, securityViolation, includeCode &amp;&amp; (aInfo.flags &amp; <span class="number">4</span>) != <span class="number">0</span>, registerPackage);</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> packageInfo2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// android.app.LoadedApk.setApplicationInfo(ApplicationInfo) void</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setApplicationInfo</span><span class="params">(ApplicationInfo aInfo)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> myUid = Process.myUid();</span><br><span class="line">    ApplicationInfo aInfo2 = adjustNativeLibraryPaths(aInfo);</span><br><span class="line">    <span class="keyword">this</span>.mApplicationInfo = aInfo2;</span><br><span class="line">    <span class="keyword">this</span>.mAppDir = aInfo2.sourceDir;</span><br><span class="line">    <span class="keyword">this</span>.mResDir = aInfo2.uid == myUid ? aInfo2.sourceDir : aInfo2.publicSourceDir;</span><br><span class="line">    <span class="keyword">this</span>.mLegacyOverlayDirs = aInfo2.resourceDirs;</span><br><span class="line">    <span class="keyword">this</span>.mOverlayPaths = aInfo2.overlayPaths;</span><br><span class="line">    <span class="keyword">this</span>.mDataDir = aInfo2.dataDir;</span><br><span class="line">    <span class="keyword">this</span>.mLibDir = aInfo2.nativeLibraryDir;</span><br><span class="line">    <span class="keyword">this</span>.mDataDirFile = FileUtils.newFileOrNull(aInfo2.dataDir);</span><br><span class="line">    <span class="keyword">this</span>.mDeviceProtectedDataDirFile = FileUtils.newFileOrNull(aInfo2.deviceProtectedDataDir);</span><br><span class="line">    <span class="keyword">this</span>.mCredentialProtectedDataDirFile = FileUtils.newFileOrNull(aInfo2.credentialProtectedDataDir);</span><br><span class="line">    <span class="keyword">this</span>.mSplitNames = aInfo2.splitNames;</span><br><span class="line">    <span class="keyword">this</span>.mSplitAppDirs = aInfo2.splitSourceDirs;</span><br><span class="line">    <span class="keyword">this</span>.mSplitResDirs = aInfo2.uid == myUid ? aInfo2.splitSourceDirs : aInfo2.splitPublicSourceDirs;</span><br><span class="line">    <span class="keyword">this</span>.mSplitClassLoaderNames = aInfo2.splitClassLoaderNames;</span><br><span class="line">    <span class="keyword">if</span> (aInfo2.requestsIsolatedSplitLoading() &amp;&amp; !ArrayUtils.isEmpty(<span class="keyword">this</span>.mSplitNames)) &#123;</span><br><span class="line">        <span class="keyword">this</span>.mSplitLoader = <span class="keyword">new</span> SplitDependencyLoaderImpl(aInfo2.splitDependencies);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最终通过外部传入的ApplicationInfo对象是一个十分关键的参数，它直接决定着目标进程的dex/lib文件的加载路径。</p>
+<p>让我们尝试将前面的信息串联起来，并尝试找到一条可以劫持目标APP dex/lib文件的攻击方案。攻击者(Attacker)可以通过发送一个Intent来唤起被害者(Victim)注册的BroadcastReceiver组件，并在Intent中夹杂一个Parcel Mismatch的对象使得<code>system_server</code> 与 Victim APP解析到不同的结果。由于Victim APP通过同一个Parcel对象顺序读取Intent参数以及ActivityInfo参数，因此，攻击者可以通过精致的布局实现将本该读取到Intent对象中的内容覆盖到<code>ActivityInfo.applicationInfo.sourceDir</code>中，实现对Victim APP加载DEX路径的劫持。(如下图所示)</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-1.png" alt="image-1.png"></p>
+<h3 id="使用Parcel-Mismatch布局Intent"><a href="#使用Parcel-Mismatch布局Intent" class="headerlink" title="使用Parcel Mismatch布局Intent"></a>使用Parcel Mismatch布局Intent</h3><p>在笔者的理解角度，ReparcelBug2的精髓就在于劫持思路上。然而作者michalbednarski展示的布局令人叹为观止，十分值得记录学习一下。</p>
+<p>首先是产生Parcel Mismatch解析的CVE-2021-0928:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.hardware.camera2.params.OutputConfiguration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Parcelable.Creator&lt;OutputConfiguration&gt; CREATOR = <span class="keyword">new</span> Parcelable.Creator&lt;OutputConfiguration&gt;() &#123; <span class="comment">// from class: android.hardware.camera2.params.OutputConfiguration.1</span></span><br><span class="line">    <span class="comment">/* JADX WARN: Can't rename method to resolve collision */</span></span><br><span class="line">    <span class="meta">@Override</span> <span class="comment">// android.p007os.Parcelable.Creator</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> OutputConfiguration <span class="title">createFromParcel</span><span class="params">(Parcel source)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> OutputConfiguration(source);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Log.e(OutputConfiguration.TAG, <span class="string">"Exception creating OutputConfiguration from parcel"</span>, e);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* JADX WARN: Can't rename method to resolve collision */</span></span><br><span class="line">    <span class="meta">@Override</span> <span class="comment">// android.p007os.Parcelable.Creator</span></span><br><span class="line">    <span class="keyword">public</span> OutputConfiguration[] newArray(<span class="keyword">int</span> size) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> OutputConfiguration[size];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>createFromParcel</code>方法中加入了<code>try-catch</code>来”避免”Parcel解析异常而导致的进程崩溃，然而，这会让Parcel在原本需要抛出异常的位置继续读取，原本应当用于构造漏洞对象<code>OutputConfiguration</code>的数据被填充进入了其他对象中。</p>
+<p>完成利用所需要解决的第一个问题是，如何将这个Parcel Mismatch的对象写入到Intent中。看似简单的Intent由于内部有许多Parcelable属性并且相互嵌套，作者找到了这样一条可利用的属性<code>Intent.mClipData.mItems.get(0).mActivityInfo.applicationInfo.splitDependencies</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.content.pm.ApplicationInfo</span></span><br><span class="line"><span class="keyword">this</span>.splitDependencies = source.readSparseArray(<span class="keyword">null</span>);</span><br></pre></td></tr></table></figure>
+
+<p>由于Java Type Erasure机制的存在SparseArray中可以被存放任意类型的对象，包括含有Parcel Mismatch的对象</p>
+<p>下面的问题是如何才能构造一个可被利用的<code>OutputConfiguration</code> 漏洞对象，这里有以下几个标准：</p>
+<ol>
+<li><p>保证在目标进程中会触发解析异常，而不会在system_server中触发异常解析；</p>
+</li>
+<li><p>保证触发解析异常之后，会被<code>try-catch</code>机制捕获，并继续完成生于Parcel的解析；</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="title">OutputConfiguration</span><span class="params">(Parcel source)</span> </span>&#123;</span><br><span class="line">    ArrayList&lt;Surface&gt; surfaces = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    source.readTypedList(surfaces, Surface.CREATOR);</span><br><span class="line">    String physicalCameraId = source.readString();</span><br><span class="line">    isMultiResolutionOutput = source.readInt() != <span class="number">1</span> ? <span class="keyword">false</span> : isMultiResolutionOutput;</span><br><span class="line">    ArrayList&lt;Integer&gt; sensorPixelModesUsed = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    source.readList(sensorPixelModesUsed, Integer.class.getClassLoader());   <span class="comment">// 可以被劫持的字段; 但需要保证抛出的异常会被OutputConfiguration的try-catch捕获        </span></span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">this</span>.mPhysicalCameraId = physicalCameraId;</span><br><span class="line">    <span class="keyword">this</span>.mIsMultiResolution = isMultiResolutionOutput;</span><br><span class="line">    <span class="keyword">this</span>.mSensorPixelModesUsed = sensorPixelModesUsed;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是有了如下的布局：(这里不是笔者没想明白故意省略布局思路，而是文笔菜鸡实在想不出如何能简明扼要的表达清楚…..)</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-2.png" alt="image-2.png"></p>
+<p>目标APP在解析<code>OutputConfiguration.mSensorPixelModesUsed.get(0)</code>会抛出异常，则<code>OutputConfiguration.mSensorPixelModesUsed.get(1)</code>就会被用于覆盖后续的参数了，为方便布局在这里存放了一个Bundle。写入Bundle会导致多处三次<code>Parcel.writeInt</code> (Bundle tag, Bundle length, Bundle MAGIC), 因此作者有找到了一个<code>ZenPolicy CREATOR</code></p>
+<p>来消耗者三次<code>Parcel.writeInt</code>，最终的布局如下：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-3.png" alt="image-3.png"></p>
+<h2 id="Android-13-中的缓解方案"><a href="#Android-13-中的缓解方案" class="headerlink" title="Android 13 中的缓解方案"></a>Android 13 中的缓解方案</h2><p>通过对ReplaceBug2的攻击流程梳理会发现，在上一篇blog中提到的Android 13引入的LazyBundle机制完全不能抵御这种攻击方式，因此，为解决ReplaceBug2类型的攻击，Android 13中引入了其他的Safer Parcel机制。</p>
+<p>首先，总结攻击流程可发现攻击者会选取一些Parcelable对象的Array/List等属性向其中塞入携带ParcelMismatch的漏洞对象。前文也提到了由于Java Type Erasure机制的存在，这些属性普遍会缺少类型校验。既然如此，那么在Android 13中便加入了对类型信息的校验：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// from android.os.Parcel</span></span><br><span class="line">    <span class="meta">@SuppressLint</span>(&#123;<span class="string">"ArrayReturn"</span>, <span class="string">"NullableCollection"</span>&#125;)</span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; T[] readArray(<span class="meta">@Nullable</span> ClassLoader loader, <span class="meta">@NonNull</span> Class&lt;T&gt; clazz) &#123;</span><br><span class="line">        Objects.requireNonNull(clazz);</span><br><span class="line">        <span class="keyword">return</span> readArrayInternal(loader, clazz);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressLint</span>(&#123;<span class="string">"ConcreteCollection"</span>, <span class="string">"NullableCollection"</span>&#125;)</span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">ArrayList&lt;T&gt; <span class="title">readArrayList</span><span class="params">(@Nullable ClassLoader loader,</span></span></span><br><span class="line"><span class="function"><span class="params">            @NonNull Class&lt;? extends T&gt; clazz)</span> </span>&#123;</span><br><span class="line">        Objects.requireNonNull(clazz);</span><br><span class="line">        <span class="keyword">return</span> readArrayListInternal(loader, clazz);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">SparseArray&lt;T&gt; <span class="title">readSparseArray</span><span class="params">(@Nullable ClassLoader loader,</span></span></span><br><span class="line"><span class="function"><span class="params">            @NonNull Class&lt;? extends T&gt; clazz)</span> </span>&#123;</span><br><span class="line">        Objects.requireNonNull(clazz);</span><br><span class="line">        <span class="keyword">return</span> readSparseArrayInternal(loader, clazz);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>其次，利用ReplaceBug2类似方案的完成的利用，很难保证Parcel对象中内容被完全读取殆尽，如下图所示：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-Parcel-%E6%BC%8F%E6%B4%9E%E6%95%B4%E7%90%86-%E4%BA%8C/image-4.png" alt="image-4.png"></p>
+<p>在Parcel对象中，添加了如下的方法用于检查Parcel中的内容是否被消费完毕，通过抛出异常的方式来阻断攻击者的利用链，这个方法可以被用于Binder.onTranscate中检查</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Verify there are no bytes left to be read on the Parcel.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> BadParcelableException If the current position hasn't reached the end of the Parcel.</span></span><br><span class="line"><span class="comment"> * When used over binder, this exception should propagate to the caller.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">enforceNoDataAvail</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> n = dataAvail();</span><br><span class="line">    <span class="keyword">if</span> (n &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> BadParcelableException(<span class="string">"Parcel data not fully consumed, unread size: "</span> + n);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Insight"><a href="#Insight" class="headerlink" title="Insight"></a>Insight</h2><p>至此，Android 12之前常见的两种Parcel Mismatch利用方式以及修复方案都总结完毕了。可以看到Android 13的Safer Parcel改造工作确实有效的增强了Parcel的安全性，阻断了利用链；但是这仍不能保证开发者不会开发出带有Parcel Mismatch问题的类出现，并且ReplaceBug2提出了一种更具有挑战性的漏洞利用思路出来，在Android 13被广泛普及之前，该类型的问题仍有很多潜在的价值等待挖掘哇。吾辈仍需不断努力。</p>
+<h2 id="REFERENCE"><a href="#REFERENCE" class="headerlink" title="REFERENCE"></a>REFERENCE</h2><ul>
+<li><p><a href="https://github.com/michalbednarski/ReparcelBug2/tree/main" target="_blank" rel="noopener">GitHub - michalbednarski/ReparcelBug2: Writeup and exploit for installed app to system privilege escalation on Android 12 Beta through CVE-2021-0928, a <code>writeToParcel</code>/<code>createFromParcel</code> serialization mismatch in <code>OutputConfiguration</code></a></p>
+</li>
+<li><p><a href="https://i.blackhat.com/EU-22/Wednesday-Briefings/EU-22-Ke-Android-Parcels-Introducing-Android-Safer-Parcel.pdf" target="_blank" rel="noopener">https://i.blackhat.com/EU-22/Wednesday-Briefings/EU-22-Ke-Android-Parcels-Introducing-Android-Safer-Parcel.pdf</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+            <a href="/tags/parcel/" rel="tag"># parcel</a>
+          
+            <a href="/tags/bundle-mismatch/" rel="tag"># bundle mismatch</a>
+          
+            <a href="/tags/framework/" rel="tag"># framework</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/01/30/Android-Parcel-漏洞整理-一/" rel="next" title="Android Parcel 系列系列漏洞整理 (一)">
+                <i class="fa fa-chevron-left"></i> Android Parcel 系列系列漏洞整理 (一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Brief"><span class="nav-number">1.</span> <span class="nav-text">Brief</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复现环境的搭建"><span class="nav-number">1.1.</span> <span class="nav-text">复现环境的搭建</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#攻击流程及原理"><span class="nav-number">2.</span> <span class="nav-text">攻击流程及原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Broadcast-Receiver-组件启动流程与劫持"><span class="nav-number">2.1.</span> <span class="nav-text">Broadcast Receiver 组件启动流程与劫持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用Parcel-Mismatch布局Intent"><span class="nav-number">2.2.</span> <span class="nav-text">使用Parcel Mismatch布局Intent</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Android-13-中的缓解方案"><span class="nav-number">3.</span> <span class="nav-text">Android 13 中的缓解方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Insight"><span class="nav-number">4.</span> <span class="nav-text">Insight</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REFERENCE"><span class="nav-number">5.</span> <span class="nav-text">REFERENCE</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
