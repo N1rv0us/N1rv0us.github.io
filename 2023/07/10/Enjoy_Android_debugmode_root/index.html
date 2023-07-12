@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android,zygote,root,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Brief对于Android 10上关闭selinux会导致root提权的事情一直都是略有耳闻，偶然的机会终于在github上找到了demo工程. 配合demo可以很好的理解整个root提权的过程，体会到Android/Linux常见的安全机制的作用效果，以及它们是如何一个一个的实效的。 这也是我第一次认真的学习Zygote的运作流程以及Linux Capabilities和Seccomp的运作机">
+<meta name="keywords" content="android,zygote,root">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Enjoy Android DebugMode Root">
+<meta property="og:url" content="http://N1rv0us@github.io/2023/07/10/Enjoy_Android_debugmode_root/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="Brief对于Android 10上关闭selinux会导致root提权的事情一直都是略有耳闻，偶然的机会终于在github上找到了demo工程. 配合demo可以很好的理解整个root提权的过程，体会到Android/Linux常见的安全机制的作用效果，以及它们是如何一个一个的实效的。 这也是我第一次认真的学习Zygote的运作流程以及Linux Capabilities和Seccomp的运作机">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/1.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/3.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/2.jpeg">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/4.png">
+<meta property="og:updated_time" content="2023-07-12T19:10:41.641Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Enjoy Android DebugMode Root">
+<meta name="twitter:description" content="Brief对于Android 10上关闭selinux会导致root提权的事情一直都是略有耳闻，偶然的机会终于在github上找到了demo工程. 配合demo可以很好的理解整个root提权的过程，体会到Android/Linux常见的安全机制的作用效果，以及它们是如何一个一个的实效的。 这也是我第一次认真的学习Zygote的运作流程以及Linux Capabilities和Seccomp的运作机">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2023/07/10/Enjoy_Android_debugmode_root/">
+
+
+
+
+
+  <title>Enjoy Android DebugMode Root | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2023/07/10/Enjoy_Android_debugmode_root/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Enjoy Android DebugMode Root</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-07-10T00:00:00+08:00">
+                2023-07-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Brief"><a href="#Brief" class="headerlink" title="Brief"></a>Brief</h2><p>对于Android 10上关闭selinux会导致root提权的事情一直都是略有耳闻，偶然的机会终于在github上找到了demo工程. 配合demo可以很好的理解整个root提权的过程，体会到Android/Linux常见的安全机制的作用效果，以及它们是如何一个一个的实效的。</p>
+<p>这也是我第一次认真的学习Zygote的运作流程以及Linux Capabilities和Seccomp的运作机制，通过本文也记录下。</p>
+<h3 id="Root-Cause"><a href="#Root-Cause" class="headerlink" title="Root Cause"></a>Root Cause</h3><p>在关闭SELinux的环境下启动Zygote，Zygote会关闭所孵化子进程的Seccomp规则。而AppZygote需要重新设置<code>Isolated Service</code> 子进程的uid，因此会拥有<code>CAP_SETUID/CAP_SETGID</code> 的权限。利用该能力可以将当前进程或是子进程设置为root uid(0). 从而实现提权；</p>
+<h2 id="AppZygote-机制"><a href="#AppZygote-机制" class="headerlink" title="AppZygote 机制"></a>AppZygote 机制</h2><p>AppZygote 是Android 10引入的机制，它允许应用自定义控制Isolated进程能够加载和访问的资源，使用AppZygote的应用将会被分配一个专门的AppZygote用于孵化其他的Isolated 进程。</p>
+<p>使用该功能需要应用在Manifest文件中做一些简单的配置：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">application</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">".App"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:zygotePreloadName</span>=<span class="string">"xxx.AppZygote"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">service</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">".MagicaService"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:isolatedProcess</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:useAppZygote</span>=<span class="string">"true"</span> /&gt;</span></span><br><span class="line">...</span><br><span class="line"><span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>所有设置了<code>android:useAppZygote=&quot;true&quot;</code> 的Isolated进程全部都会通过应用的AppZygote来加载。在<code>&lt;application&gt;</code>标签下配置<code>android:zygotePreloadName</code> 来指定用于管理Isolated进程能够加载和访问的资源；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">AppZygote</span> <span class="keyword">implements</span> <span class="title">ZygotePreload</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doPreload</span><span class="params">(ApplicationInfo appInfo)</span> </span>&#123;</span><br><span class="line">        System.loadLibrary(<span class="string">"magica"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与Zygote的加载流程相似，<code>doPreload</code>方法也会在应用加载之前被调用；</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/1.png" alt="1.png"></p>
+<h3 id="AppZygote-Server-启动"><a href="#AppZygote-Server-启动" class="headerlink" title="AppZygote Server 启动"></a>AppZygote Server 启动</h3><p>首先来分析下负责孵化Isolated Service进程的AppZygote Service是如何被启动的.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.os.AppZygote</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">connectToZygoteIfNeededLocked</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String abi = <span class="keyword">this</span>.mAppInfo.primaryCpuAbi != <span class="keyword">null</span> ? <span class="keyword">this</span>.mAppInfo.primaryCpuAbi : Build.SUPPORTED_ABIS[<span class="number">0</span>];</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">int</span> i = <span class="keyword">this</span>.mZygoteUid;</span><br><span class="line">            <span class="comment">// create child Zygote Process here;</span></span><br><span class="line">            ChildZygoteProcess startChildZygote = Process.ZYGOTE_PROCESS.startChildZygote(<span class="string">"com.android.internal.os.AppZygoteInit"</span>, <span class="keyword">this</span>.mAppInfo.processName + <span class="string">"_zygote"</span>, i, i, <span class="keyword">null</span>, <span class="number">0</span>, <span class="string">"app_zygote"</span>, abi, abi, VMRuntime.getInstructionSet(abi), <span class="keyword">this</span>.mZygoteUidGidMin, <span class="keyword">this</span>.mZygoteUidGidMax);</span><br><span class="line">            <span class="keyword">this</span>.mZygote = startChildZygote;</span><br><span class="line">            ZygoteProcess.waitForConnectionToZygote(startChildZygote.getPrimarySocketAddress());</span><br><span class="line">            Log.m446i(LOG_TAG, <span class="string">"Starting application preload."</span>);</span><br><span class="line">            <span class="keyword">this</span>.mZygote.preloadApp(<span class="keyword">this</span>.mAppInfo, abi);</span><br><span class="line">            Log.m446i(LOG_TAG, <span class="string">"Application preload done."</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Log.m447e(LOG_TAG, <span class="string">"Error connecting to app zygote"</span>, e);</span><br><span class="line">            stopZygoteLocked();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// android.os.ChildZygoteProcess</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ChildZygoteProcess</span> <span class="keyword">extends</span> <span class="title">ZygoteProcess</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> mPid;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* JADX INFO: Access modifiers changed from: package-private */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ChildZygoteProcess</span><span class="params">(LocalSocketAddress socketAddress, <span class="keyword">int</span> pid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(socketAddress, <span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">this</span>.mPid = pid;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPid</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.mPid;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AppZygote Service 本质上是一个类似于Zygote进程，包含进程的pid以及一个LocalSocketAddress。通过向这个本地socket发送信息来创建所属的Isolated Service. 而AppZygote Service进程的启动需要向Zygote进程的发送请求来创建；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android.p008os.ZygoteProcess</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ChildZygoteProcess <span class="title">startChildZygote</span><span class="params">(String processClass, String niceName, <span class="keyword">int</span> uid, <span class="keyword">int</span> gid, <span class="keyword">int</span>[] gids, <span class="keyword">int</span> runtimeFlags, String seInfo, String abi, String acceptedAbiList, String instructionSet, <span class="keyword">int</span> uidRangeStart, <span class="keyword">int</span> uidRangeEnd)</span> </span>&#123;</span><br><span class="line">    LocalSocketAddress serverAddress = <span class="keyword">new</span> LocalSocketAddress(processClass + SliceClientPermissions.SliceAuthority.DELIMITER + UUID.randomUUID().toString());</span><br><span class="line">    String[] extraArgs = &#123;Zygote.CHILD_ZYGOTE_SOCKET_NAME_ARG + serverAddress.getName(), Zygote.CHILD_ZYGOTE_ABI_LIST_ARG + acceptedAbiList, Zygote.CHILD_ZYGOTE_UID_RANGE_START + uidRangeStart, Zygote.CHILD_ZYGOTE_UID_RANGE_END + uidRangeEnd&#125;;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// call fork zygote child process here;</span></span><br><span class="line">        Process.ProcessStartResult result = startViaZygote(processClass, niceName, uid, gid, gids, runtimeFlags, <span class="number">0</span>, <span class="number">0</span>, seInfo, abi, instructionSet, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">true</span>, <span class="keyword">null</span>, <span class="number">4</span>, <span class="keyword">false</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, extraArgs);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ChildZygoteProcess(serverAddress, result.pid);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ZygoteStartFailedEx ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Starting child-zygote through Zygote failed"</span>, ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Process.<span class="function">ProcessStartResult <span class="title">startViaZygote</span><span class="params">(String processClass, String niceName, <span class="keyword">int</span> uid, <span class="keyword">int</span> gid, <span class="keyword">int</span>[] gids, <span class="keyword">int</span> runtimeFlags, <span class="keyword">int</span> mountExternal, <span class="keyword">int</span> targetSdkVersion, String seInfo, String abi, String instructionSet, String appDataDir, String invokeWith, <span class="keyword">boolean</span> startChildZygote, String packageName, <span class="keyword">int</span> zygotePolicyFlags, <span class="keyword">boolean</span> isTopApp, <span class="keyword">long</span>[] disabledCompatChanges, Map&lt;String, Pair&lt;String, Long&gt;&gt; pkgDataInfoMap, Map&lt;String, Pair&lt;String, Long&gt;&gt; allowlistedDataInfoList, <span class="keyword">boolean</span> bindMountAppsData, <span class="keyword">boolean</span> bindMountAppStorageDirs, String[] extraArgs)</span> <span class="keyword">throws</span> ZygoteStartFailedEx </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> sz;</span><br><span class="line">    ArrayList&lt;String&gt; argsForZygote = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    argsForZygote.add(<span class="string">"--runtime-args"</span>);</span><br><span class="line">    argsForZygote.add(<span class="string">"--setuid="</span> + uid);</span><br><span class="line">    argsForZygote.add(<span class="string">"--setgid="</span> + gid);</span><br><span class="line">    argsForZygote.add(<span class="string">"--runtime-flags="</span> + runtimeFlags);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.mLock) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// Collation parameters and call next step;</span></span><br><span class="line">                <span class="keyword">return</span> zygoteSendArgsAndGetResult(openZygoteSocketIfNeeded(abi), zygotePolicyFlags, argsForZygote);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable th) &#123;</span><br><span class="line">                th = th;</span><br><span class="line">                <span class="keyword">throw</span> th;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable th2) &#123;</span><br><span class="line">            th = th2;</span><br><span class="line">            <span class="keyword">throw</span> th;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Process.<span class="function">ProcessStartResult <span class="title">zygoteSendArgsAndGetResult</span><span class="params">(ZygoteState zygoteState, <span class="keyword">int</span> zygotePolicyFlags, ArrayList&lt;String&gt; args)</span> <span class="keyword">throws</span> ZygoteStartFailedEx </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Organize parameters into a string and call next step;</span></span><br><span class="line">    <span class="keyword">return</span> attemptZygoteSendArgsAndGetResult(zygoteState, msgStr);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Process.<span class="function">ProcessStartResult <span class="title">attemptZygoteSendArgsAndGetResult</span><span class="params">(ZygoteState zygoteState, String msgStr)</span> <span class="keyword">throws</span> ZygoteStartFailedEx </span>&#123;</span><br><span class="line">    <span class="comment">// send command to zygote local socket;;    </span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        BufferedWriter zygoteWriter = zygoteState.mZygoteOutputWriter;</span><br><span class="line">        DataInputStream zygoteInputStream = zygoteState.mZygoteInputStream;</span><br><span class="line">        zygoteWriter.write(msgStr);</span><br><span class="line">        zygoteWriter.flush();</span><br><span class="line">        Process.ProcessStartResult result = <span class="keyword">new</span> Process.ProcessStartResult();</span><br><span class="line">        result.pid = zygoteInputStream.readInt();</span><br><span class="line">        result.usingWrapper = zygoteInputStream.readBoolean();</span><br><span class="line">        <span class="keyword">if</span> (result.pid &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ZygoteStartFailedEx(<span class="string">"fork() failed"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">        zygoteState.close();</span><br><span class="line">        Log.m448e(LOG_TAG, <span class="string">"IO Exception while communicating with Zygote - "</span> + ex.toString());</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ZygoteStartFailedEx(ex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>经过一系列的参数合并操作后，通过LocalSocket 发送给Zygote进程，让其去fork AppZygote 子进程。</p>
+<p>略过Zygote进程接收socket传输内容的部分，这部分代码在大多介绍zygote的文章中都有详细的介绍且和本文关系并不大。直接看下对AppZygote启动命令的解析部分：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.android.internal.p027os.ZygoteConnection</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Reads a command from the command socket. If a child is successfully forked, a</span></span><br><span class="line"><span class="comment">     * &#123;<span class="doctag">@code</span> Runnable&#125; that calls the childs main method (or equivalent) is returned in the child</span></span><br><span class="line"><span class="comment">     * process. &#123;<span class="doctag">@code</span> null&#125; is always returned in the parent process (the zygote).</span></span><br><span class="line"><span class="comment">     * If multipleOK is set, we may keep processing additional fork commands before returning.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * If the client closes the socket, an &#123;<span class="doctag">@code</span> EOF&#125; condition is set, which callers can test</span></span><br><span class="line"><span class="comment">     * for by calling &#123;<span class="doctag">@code</span> ZygoteConnection.isClosedByPeer&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">Runnable <span class="title">processCommand</span><span class="params">(ZygoteServer zygoteServer, <span class="keyword">boolean</span> multipleOK)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">        <span class="keyword">if</span> (parsedArgs.mInvokeWith != <span class="keyword">null</span> || parsedArgs.mStartChildZygote</span><br><span class="line">                        || !multipleOK || peer.getUid() != Process.SYSTEM_UID) &#123;</span><br><span class="line">                    <span class="comment">// Continue using old code for now. <span class="doctag">TODO:</span> Handle these cases in the other path.</span></span><br><span class="line">                    pid = Zygote.forkAndSpecialize(parsedArgs.mUid, parsedArgs.mGid,</span><br><span class="line">                            parsedArgs.mGids, parsedArgs.mRuntimeFlags, rlimits,</span><br><span class="line">                            parsedArgs.mMountExternal, parsedArgs.mSeInfo, parsedArgs.mNiceName,</span><br><span class="line">                            fdsToClose, fdsToIgnore, parsedArgs.mStartChildZygote,</span><br><span class="line">                            parsedArgs.mInstructionSet, parsedArgs.mAppDataDir,</span><br><span class="line">                            parsedArgs.mIsTopApp, parsedArgs.mPkgDataInfoList,</span><br><span class="line">                            parsedArgs.mAllowlistedDataInfoList, parsedArgs.mBindMountAppDataDirs,</span><br><span class="line">                            parsedArgs.mBindMountAppStorageDirs);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// com.android.internal.p027os.Zygote</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">forkAndSpecialize</span><span class="params">(<span class="keyword">int</span> uid, <span class="keyword">int</span> gid, <span class="keyword">int</span>[] gids, <span class="keyword">int</span> runtimeFlags, <span class="keyword">int</span>[][] rlimits, <span class="keyword">int</span> mountExternal, String seInfo, String niceName, <span class="keyword">int</span>[] fdsToClose, <span class="keyword">int</span>[] fdsToIgnore, <span class="keyword">boolean</span> startChildZygote, String instructionSet, String appDataDir, <span class="keyword">boolean</span> isTopApp, String[] pkgDataInfoList, String[] allowlistedDataInfoList, <span class="keyword">boolean</span> bindMountAppDataDirs, <span class="keyword">boolean</span> bindMountAppStorageDirs)</span> </span>&#123;</span><br><span class="line">        ZygoteHooks.preFork();</span><br><span class="line">        <span class="comment">// call native method to fork child process;</span></span><br><span class="line">        <span class="keyword">int</span> pid = nativeForkAndSpecialize(uid, gid, gids, runtimeFlags, rlimits, mountExternal, seInfo, niceName, fdsToClose, fdsToIgnore, startChildZygote, instructionSet, appDataDir, isTopApp, pkgDataInfoList, allowlistedDataInfoList, bindMountAppDataDirs, bindMountAppStorageDirs);</span><br><span class="line">        <span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;</span><br><span class="line">            Trace.traceBegin(<span class="number">64L</span>, <span class="string">"PostFork"</span>);</span><br><span class="line">            <span class="keyword">if</span> (gids != <span class="keyword">null</span> &amp;&amp; gids.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                NetworkUtilsInternal.setAllowNetworkingForProcess(containsInetGid(gids));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        Thread.currentThread().setPriority(<span class="number">5</span>);</span><br><span class="line">        ZygoteHooks.postForkCommon();</span><br><span class="line">        <span class="keyword">return</span> pid;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过调用Zygote.nativeForkAndSpecialize的native方法来实现进程的创建，实际上App的启动也同样是通过该native方法来创建的，但是启动参数包含了一个<code>startChildZygote</code> 用于标记创建的进程是否为AppZygote进程。带有此标记的进程会有一些特殊的配置。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> jlong <span class="title">CalculateCapabilities</span><span class="params">(JNIEnv* env, jint uid, jint gid, jintArray gids,</span></span></span><br><span class="line"><span class="function"><span class="params">                                   <span class="keyword">bool</span> is_child_zygote)</span> </span>&#123;</span><br><span class="line">  jlong capabilities = <span class="number">0</span>;</span><br><span class="line">    ...</span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   * Grant child Zygote processes the following capabilities:</span></span><br><span class="line"><span class="comment">   *   - CAP_SETUID (change UID of child processes)</span></span><br><span class="line"><span class="comment">   *   - CAP_SETGID (change GID of child processes)</span></span><br><span class="line"><span class="comment">   *   - CAP_SETPCAP (change capabilities of child processes)</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (is_child_zygote) &#123;</span><br><span class="line">    capabilities |= (<span class="number">1L</span>L &lt;&lt; CAP_SETUID);</span><br><span class="line">    capabilities |= (<span class="number">1L</span>L &lt;&lt; CAP_SETGID);</span><br><span class="line">    capabilities |= (<span class="number">1L</span>L &lt;&lt; CAP_SETPCAP);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   * Containers run without some capabilities, so drop any caps that are not</span></span><br><span class="line"><span class="comment">   * available.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> capabilities &amp; GetEffectiveCapabilityMask(env);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面这段代码展示了Zygote进程在孵化AppZygote进程会赋予其CAP_SETUID, CAP_SETGID, CAP_SETPCAP，这是为了AppZygote能够修改Isolated Service进程uid。但是这并不意味着AppZygote可以任意修改进程的uid，Zygote为其设置了seccomp filter 限制其只能将uid修改为指定范围内</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">com_android_internal_os_Zygote_nativeInstallSeccompUidGidFilter</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        JNIEnv* env, jclass, jint uidGidMin, jint uidGidMax)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!gIsSecurityEnforced) &#123;</span><br><span class="line">    ALOGI(<span class="string">"seccomp disabled by setenforce 0"</span>);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">bool</span> installed = install_setuidgid_seccomp_filter(uidGidMin, uidGidMax);</span><br><span class="line">  <span class="keyword">if</span> (!installed) &#123;</span><br><span class="line">      RuntimeAbort(env, __LINE__, <span class="string">"Could not install setuid/setgid seccomp filter."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此AppZygoteProcess进程创建完毕，后续标记了android:useAppZygote的Isolated Service就全部会通过这个AppZygote来孵化。</p>
+<h3 id="Isolated-Service-的启动"><a href="#Isolated-Service-的启动" class="headerlink" title="Isolated Service 的启动"></a>Isolated Service 的启动</h3><p>带有标记android:useAppZygote的Isolated Service会在其ServiceInfo中带有一个flag</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android/content/pm/ServiceInfo.java</span></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Bit in &#123;<span class="doctag">@link</span> #flags&#125;: If set, the service (which must be isolated)</span></span><br><span class="line"><span class="comment">     * will be spawned from an Application Zygote, instead of the regular Zygote.</span></span><br><span class="line"><span class="comment">     * The Application Zygote will pre-initialize the application's class loader,</span></span><br><span class="line"><span class="comment">     * and call a static callback into the application to allow it to perform</span></span><br><span class="line"><span class="comment">     * application-specific preloads (such as loading a shared library). Therefore,</span></span><br><span class="line"><span class="comment">     * spawning from the Application Zygote will typically reduce the service</span></span><br><span class="line"><span class="comment">     * launch time and reduce its memory usage. The downside of using this flag</span></span><br><span class="line"><span class="comment">     * is that you will have an additional process (the app zygote itself) that</span></span><br><span class="line"><span class="comment">     * is taking up memory. Whether actual memory usage is improved therefore</span></span><br><span class="line"><span class="comment">     * strongly depends on the number of isolated services that an application</span></span><br><span class="line"><span class="comment">     * starts, and how much memory those services save by preloading. Therefore,</span></span><br><span class="line"><span class="comment">     * it is recommended to measure memory usage under typical workloads to</span></span><br><span class="line"><span class="comment">     * determine whether it makes sense to use this flag.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> FLAG_USE_APP_ZYGOTE = <span class="number">0x0008</span>;</span><br></pre></td></tr></table></figure>
+
+<p>相应的这些Service启动的时候就会通过AppZygote来创建子进程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.android.server.p028am.ProcessList</span></span><br><span class="line"><span class="keyword">private</span> Process.<span class="function">ProcessStartResult <span class="title">startProcess</span><span class="params">(...)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    storageManagerInternal = storageManagerInternal2;</span><br><span class="line">    userId = userId2;</span><br><span class="line">    j = <span class="number">64</span>;</span><br><span class="line">    <span class="keyword">if</span> (hostingRecord.usesAppZygote()) &#123;</span><br><span class="line">        AppZygote appZygote = createAppZygoteForProcessIfNeeded(app);</span><br><span class="line">        startResult = appZygote.getProcess().start(entryPoint, app.processName, uid, uid, gids, runtimeFlags, mountExternal, app.info.targetSdkVersion, seInfo, requiredAbi, instructionSet, app.info.dataDir, <span class="keyword">null</span>, app.info.packageName, <span class="number">0</span>, isTopApp, app.getDisabledCompatChanges(), pkgDataInfoMap, allowlistedAppDataInfoMap, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">new</span> String[]&#123;ActivityThread.PROC_START_SEQ_IDENT + app.getStartSeq()&#125;);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        regularZygote = <span class="keyword">true</span>;</span><br><span class="line">        startResult = Process.start(entryPoint, app.processName, uid, uid, gids, runtimeFlags, mountExternal, app.info.targetSdkVersion, seInfo, requiredAbi, instructionSet, app.info.dataDir, invokeWith, app.info.packageName, zygotePolicyFlags, isTopApp, app.getDisabledCompatChanges(), pkgDataInfoMap, allowlistedAppDataInfoMap, bindMountAppsData, bindMountAppStorageDirs, <span class="keyword">new</span> String[]&#123;ActivityThread.PROC_START_SEQ_IDENT + app.getStartSeq()&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AppZygote与Zygote不同的是，其会反射APP中的方法来配置子进程可以访问的目录或是lib</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.android.internal.os.AppZygoteInit$AppZygoteConnection</span></span><br><span class="line"><span class="meta">@Override</span> <span class="comment">// com.android.internal.p027os.ZygoteConnection</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">handlePreloadApp</span><span class="params">(ApplicationInfo appInfo)</span> </span>&#123;</span><br><span class="line">    Log.m446i(AppZygoteInit.TAG, <span class="string">"Beginning application preload for "</span> + appInfo.packageName);</span><br><span class="line">    LoadedApk loadedApk = <span class="keyword">new</span> LoadedApk(<span class="keyword">null</span>, appInfo, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">    ClassLoader loader = loadedApk.getClassLoader();</span><br><span class="line">    Zygote.allowAppFilesAcrossFork(appInfo);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (appInfo.zygotePreloadName != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ComponentName preloadName = ComponentName.createRelative(appInfo.packageName, appInfo.zygotePreloadName);</span><br><span class="line">            Class&lt;?&gt; cl = Class.forName(preloadName.getClassName(), <span class="keyword">true</span>, loader);</span><br><span class="line">            <span class="keyword">if</span> (!ZygotePreload.class.isAssignableFrom(cl)) &#123;</span><br><span class="line">                Log.m448e(AppZygoteInit.TAG, preloadName.getClassName() + <span class="string">" does not implement "</span> + ZygotePreload.class.getName());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                Constructor&lt;?&gt; ctor = cl.getConstructor(<span class="keyword">new</span> Class[<span class="number">0</span>]);</span><br><span class="line">                ZygotePreload preloadObject = (ZygotePreload) ctor.newInstance(<span class="keyword">new</span> Object[<span class="number">0</span>]);</span><br><span class="line">                Zygote.markOpenedFilesBeforePreload();</span><br><span class="line">                preloadObject.doPreload(appInfo);</span><br><span class="line">                Zygote.allowFilesOpenedByPreload();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ReflectiveOperationException e) &#123;</span><br><span class="line">            Log.m447e(AppZygoteInit.TAG, <span class="string">"AppZygote application preload failed for "</span> + appInfo.zygotePreloadName, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Log.m446i(AppZygoteInit.TAG, <span class="string">"No zygotePreloadName attribute specified."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        DataOutputStream socketOut = getSocketOutputStream();</span><br><span class="line">        <span class="keyword">if</span> (loader == <span class="keyword">null</span>) &#123;</span><br><span class="line">            i = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        socketOut.writeInt(i);</span><br><span class="line">        Log.m446i(AppZygoteInit.TAG, <span class="string">"Application preload done"</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e2) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Error writing to command socket"</span>, e2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭Selinux-获取root权限"><a href="#关闭Selinux-获取root权限" class="headerlink" title="关闭Selinux 获取root权限"></a>关闭Selinux 获取root权限</h2><h3 id="AppZygote-Service-提权"><a href="#AppZygote-Service-提权" class="headerlink" title="AppZygote Service 提权"></a>AppZygote Service 提权</h3><p>从上文的代码中可以了解到AppZygote是可以修改进程的uid/gid的，并通过一个seccomp filter来避免AppZygote任意修改uid来做root提权或是占用其他进程的uid。但是在此回顾seccomp的代码发现，当<code>setenforce 0</code> 的时候，seccomp filter不会被设置</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">com_android_internal_os_Zygote_nativeInstallSeccompUidGidFilter</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        JNIEnv* env, jclass, jint uidGidMin, jint uidGidMax)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!gIsSecurityEnforced) &#123;</span><br><span class="line">    ALOGI(<span class="string">"seccomp disabled by setenforce 0"</span>);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">bool</span> installed = install_setuidgid_seccomp_filter(uidGidMin, uidGidMax);</span><br><span class="line">  <span class="keyword">if</span> (!installed) &#123;</span><br><span class="line">      RuntimeAbort(env, __LINE__, <span class="string">"Could not install setuid/setgid seccomp filter."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SetUpSeccompFilter</span><span class="params">(<span class="keyword">uid_t</span> uid, <span class="keyword">bool</span> is_child_zygote)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!gIsSecurityEnforced) &#123;</span><br><span class="line">    ALOGI(<span class="string">"seccomp disabled by setenforce 0"</span>);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Apply system or app filter based on uid.</span></span><br><span class="line">  <span class="keyword">if</span> (uid &gt;= AID_APP_START) &#123;</span><br><span class="line">    <span class="keyword">if</span> (is_child_zygote) &#123;</span><br><span class="line">      set_app_zygote_seccomp_filter();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      set_app_seccomp_filter();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    set_system_seccomp_filter();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而且并不仅仅是用于限制uid修改范围的seccomp filter不会被加载，是所有Zygote子进程的seccomp filter都不会被记载。</p>
+<p>在没有seccomp filter的限制，AppZygote即可犹如脱缰的野马，任意设置uid/gid。比如将自己的uid设置为root</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">AppZygote</span> <span class="keyword">implements</span> <span class="title">ZygotePreload</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doPreload</span><span class="params">(ApplicationInfo appInfo)</span> </span>&#123;</span><br><span class="line">        System.loadLibrary(<span class="string">"magica"</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Class processcls = Class.forName(<span class="string">"android.os.Process"</span>);</span><br><span class="line">            Method m = processcls.getDeclaredMethod(<span class="string">"setUid"</span>, <span class="keyword">int</span>.class);</span><br><span class="line">            m.invoke(<span class="keyword">null</span>, <span class="number">0</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/3.png" alt="3.png"></p>
+<h3 id="Isolated-Service-提权"><a href="#Isolated-Service-提权" class="headerlink" title="Isolated Service 提权"></a>Isolated Service 提权</h3><p>原本是受限的进程，但是在selinux &amp; seccomp机制全部被关闭的情况下，也是有机会将自己提权到root的。</p>
+<p>想要提权就需要先解决一个问题，AppZygote进程是具有CAP_SETUID等能力的，但是其fork的Isolated Service并不会被赋予这些能力，那么如何继承到这些Capabilities呢？</p>
+<p>方法很简单，那就是inline hook。在梳理Isolated Service的启动流程的时候提到AppZygote在fork子进程之前会先调用App的preload中定义的方法来加载一些lib库。通过加载的lib代码，可以实现对<code>libandroid_runtime.so</code>的hook，将Capabilities继承到Isolated Service 进程中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">jint <span class="title">JNI_OnLoad</span><span class="params">(JavaVM *jvm, <span class="keyword">void</span> *v __unused)</span> </span>&#123;</span><br><span class="line">    JNIEnv *env;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    signal(SIGSYS, signal_handler);</span><br><span class="line"></span><br><span class="line">    xhook_register(<span class="string">".*\\libandroid_runtime.so$"</span>, <span class="string">"capset"</span>, skip_capset, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (xhook_refresh(<span class="number">0</span>)) PLOGE(<span class="string">"xhook"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> JNI_VERSION_1_6;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>后续通过注册和调用一个native方法就可以实现修改uid/gid来提权</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">root</span><span class="params">(JNIEnv *env  __unused, jclass clazz __unused)</span> </span>&#123;</span><br><span class="line">    change_cap(CAP_SET);</span><br><span class="line">    print_cap();</span><br><span class="line">    <span class="keyword">if</span> (setresuid(AID_ROOT, AID_ROOT, AID_ROOT)) &#123;</span><br><span class="line">        PLOGE(<span class="string">"setresuid"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (geteuid() == AID_ROOT) &#123;</span><br><span class="line">        LOGI(<span class="string">"We Are Root!!!"</span>);</span><br><span class="line">        <span class="keyword">if</span> (setresgid(AID_ROOT, AID_ROOT, AID_ROOT)) &#123;</span><br><span class="line">            PLOGE(<span class="string">"setresgid"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">gid_t</span> groups[] = &#123;AID_SYSTEM, AID_ADB, AID_LOG, AID_INPUT, AID_INET,</span><br><span class="line">                          AID_NET_BT, AID_NET_BT_ADMIN, AID_SDCARD_R, AID_SDCARD_RW,</span><br><span class="line">                          AID_NET_BW_STATS, AID_READPROC, AID_UHID, AID_EXT_DATA_RW,</span><br><span class="line">                          AID_EXT_OBB_RW&#125;;</span><br><span class="line">        <span class="keyword">if</span> (setgroups(arraysize(groups), groups)) &#123;</span><br><span class="line">            PLOGE(<span class="string">"setgroups"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/2.jpeg" alt="2.jpeg"></p>
+<h3 id="一些其他的限制条件"><a href="#一些其他的限制条件" class="headerlink" title="一些其他的限制条件"></a>一些其他的限制条件</h3><p>上面提到的两个修改uid/gid的例子都是由于在通过<code>setenforce 0</code>关闭了selinux之后，Zygote又关闭了seccomp filter而导致的。这就需要在Zygote进程启动的时候，selinux就已经被关闭了。由于gIsSecurityEnforced变量在Zygote启动的时候就被设定了而不会改变</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">com_android_internal_os_Zygote_nativeSpecializeAppProcess</span><span class="params">(..)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">  <span class="comment">// security_getenforce is not allowed on app process. Initialize and cache</span></span></span><br><span class="line"><span class="function">  <span class="comment">// the value before zygote forks.</span></span></span><br><span class="line"><span class="function">  gIsSecurityEnforced </span>= security_getenforce();</span><br></pre></td></tr></table></figure>
+
+<p>因此在测试提权之前，需要想办法重启一下Zygote进程。可以通过toolbox中的start/stop命令来完成framework的重启</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// system/core/toolbox/start.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">ControlDefaultServices</span><span class="params">(<span class="keyword">bool</span> start)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt; services = &#123;</span><br><span class="line">        <span class="string">"netd"</span>,</span><br><span class="line">        <span class="string">"surfaceflinger"</span>,</span><br><span class="line">        <span class="string">"audioserver"</span>,</span><br><span class="line">        <span class="string">"zygote"</span>,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Only start zygote_secondary if not single arch.</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> zygote_configuration = GetProperty(<span class="string">"ro.zygote"</span>, <span class="string">""</span>);</span><br><span class="line">    <span class="keyword">if</span> (zygote_configuration != <span class="string">"zygote32"</span> &amp;&amp; zygote_configuration != <span class="string">"zygote64"</span>) &#123;</span><br><span class="line">        services.emplace_back(<span class="string">"zygote_secondary"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (start) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; service : services) &#123;</span><br><span class="line">            ControlService(<span class="literal">true</span>, service);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> it = services.crbegin(); it != services.crend(); ++it) &#123;</span><br><span class="line">            ControlService(<span class="literal">false</span>, *it);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该命令需要root权限才可以调用但可以方便快捷的重启Zygote.</p>
+<p>检查下Zygote fork出来的子进程也可发现没有设置任何的seccomp filter.</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Enjoy_Android_debugmode_root/4.png" alt="4.png"></p>
+<h2 id="总结一下"><a href="#总结一下" class="headerlink" title="总结一下"></a>总结一下</h2><p>当下，Android早就强制必须开启selinux，如果selinux被关闭则Android 系统可能认为处于调试/测试环境下，一些类似的安全机制如seccomp也会被一起关闭。整个设备将处于更低的安全环境中，会不自觉的扩展出更多的攻击面。</p>
+<p>对于selinux正常运行的环境来讲，本文描述的内容很难被认为是一个安全漏洞。需要在Zygote启动前，通过setenforce 0来关闭selinux. 显然在为获取root权限之前这几乎是不可能办到的。可能是基于此原因这部分功能虽然已经广受讨论但是在最新的Android代码中仍然没有修改。</p>
+<p>一句话，safe.</p>
+<p>本文的最后，特别感谢<a href="https://github.com/xweiwei" target="_blank" rel="noopener">@炜唯</a>师父在我分析过程中提供的帮助；如需复现本文中的方案使用Reference中的Magica项目在Android 10之后的系统测试即可。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><p><a href="https://evilpan.com/2020/12/06/android-rooting/#dac" target="_blank" rel="noopener">Android/Linux Root 的那些事儿 - evilpan</a></p>
+</li>
+<li><p><a href="https://blog.csdn.net/wangpengqi/article/details/9821227" target="_blank" rel="noopener">Linux的capability深入分析（1）_cap_get_proc_wangpengqi的博客-CSDN博客</a></p>
+</li>
+<li><p><a href="https://github.com/vvb2060/Magica" target="_blank" rel="noopener">https://github.com/vvb2060/Magica</a></p>
+</li>
+<li><p><a href="http://gityuan.com/2016/02/13/android-zygote/" target="_blank" rel="noopener">Android系统启动-zygote篇 - Gityuan博客 | 袁辉辉的技术博客</a></p>
+</li>
+<li><p><a href="https://developer.android.com/reference/android/app/ZygotePreload" target="_blank" rel="noopener">https://developer.android.com/reference/android/app/ZygotePreload</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+            <a href="/tags/zygote/" rel="tag"># zygote</a>
+          
+            <a href="/tags/root/" rel="tag"># root</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/06/15/CVE-2023-0386复现与分析/" rel="next" title="CVE-2023-0386复现与分析">
+                <i class="fa fa-chevron-left"></i> CVE-2023-0386复现与分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Brief"><span class="nav-number">1.</span> <span class="nav-text">Brief</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Root-Cause"><span class="nav-number">1.1.</span> <span class="nav-text">Root Cause</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AppZygote-机制"><span class="nav-number">2.</span> <span class="nav-text">AppZygote 机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AppZygote-Server-启动"><span class="nav-number">2.1.</span> <span class="nav-text">AppZygote Server 启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Isolated-Service-的启动"><span class="nav-number">2.2.</span> <span class="nav-text">Isolated Service 的启动</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关闭Selinux-获取root权限"><span class="nav-number">3.</span> <span class="nav-text">关闭Selinux 获取root权限</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AppZygote-Service-提权"><span class="nav-number">3.1.</span> <span class="nav-text">AppZygote Service 提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Isolated-Service-提权"><span class="nav-number">3.2.</span> <span class="nav-text">Isolated Service 提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一些其他的限制条件"><span class="nav-number">3.3.</span> <span class="nav-text">一些其他的限制条件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结一下"><span class="nav-number">4.</span> <span class="nav-text">总结一下</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
