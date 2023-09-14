@@ -87,19 +87,19 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="缘起大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣.  关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exp">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBoot.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/IDA_config.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/command_struct.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/ABL_cmd.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/comman_entry.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/write_prim0.png">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/read_prim.png">
-<meta property="og:updated_time" content="2023-09-14T18:29:09.858Z">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/SecureBootChain.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/SecureBoot.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/IDA_config.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/command_struct.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/ABL_cmd.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/comman_entry.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/write_prim0.png?raw=true">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/read_prim.png?raw=true">
+<meta property="og:updated_time" content="2023-09-14T18:40:10.150Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Lean And Emulate Pixel bootloader for Finding Bugs">
 <meta name="twitter:description" content="缘起大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣.  关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exp">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png">
+<meta name="twitter:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/SecureBootChain.png?raw=true">
 
 
 
@@ -314,9 +314,9 @@
 <p>文章里面并没有公开bootloader的漏洞位置以及exploit代码，但实际上文章中的不少细节也足够定位到漏洞的位置，并且作者公开的使用unicorn模拟执行等一些列代码已经让我受益匪浅了。因此本次我并没有执着于一定要找到这个已经被修复的漏洞位置并利用成功，本文也会更加关注于eshard系列文章作者对于漏洞挖掘思路以及工具使用的记录与思考。</p>
 <h2 id="BootUp-amp-SecureBoot"><a href="#BootUp-amp-SecureBoot" class="headerlink" title="BootUp &amp; SecureBoot"></a>BootUp &amp; SecureBoot</h2><p>首先了解下Pixel 6的启动流程能够帮助更好的找到并理解分析目标的功能作用。<a href="https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/secure-boot-image-authentication_11.30.16.pdf" target="_blank" rel="noopener">高通公开文档</a> 中介绍了SecureBoot的启动以及image之间的认证过程。</p>
 <p>设备厂商会持有一组私钥(private key)并将其公钥存写入bootROM中，并将这些公钥的hash烧写到硬件fuse中确保bootROM中的公钥不会被篡改，这些公钥即可作为设备的信任根。SecureBoot Chain由存放在bootROM中的信任根开始，每个阶段都会遵循镜像加载、RSA认证、执行到下一阶段，以次来保证整个启动流程执行流是没有被篡改的。</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png" alt="SecureBootChain.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/SecureBootChain.png?raw=true" alt="SecureBootChain.png"></p>
 <p>quarkslab总结了总结了高通SecureBoot的启动过程，如下图:</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBoot.png" alt="SecureBoot.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/SecureBoot.png?raw=true" alt="SecureBoot.png"></p>
 <ul>
 <li><p>bootROM中包含了PBL(Primary Boot Loader)部分的流程，是CPU最先加载和执行的代码; 在这里启动错误或是设备重启过程中的选项, 可以进入EDL, 在这个模式下可以刷机(也就是传说中的9008刷机)</p>
 </li>
@@ -330,23 +330,23 @@
 <p>./imjtool path/to/bootloader.img extract</p>
 </blockquote>
 <p>解压后可以获取到adl文件，通过IDA可以分析，分析时注意选择ARM Little-endian，并配置好ROM 起始地址,  确认ROM的其实地址可以通过先设置成0用IDA解析一下，在起始位置附近找一下，很快就可以确定这个地址。</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/IDA_config.png" alt="IDA_config.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/IDA_config.png?raw=true" alt="IDA_config.png"></p>
 <p>(插句题外话，在Eshard的第一篇文章Pixel 6 BootUp中对Android 12版本rom的abl有非常详细的解析过程，为了不完全照搬Eshard文章的成果本节后续对abl的解析对应的是Android 13版本ROM)</p>
 <p>据说如果使用8.0以上版本的IDA加载abl完成后会自动解析出大部分函数。我手上的IDA并没有那么高的版本，需要搞一段IDA scripts自动生成下function就可以：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> idc </span><br><span class="line"><span class="keyword">import</span> idautils </span><br><span class="line"><span class="keyword">import</span> idaapi </span><br><span class="line"></span><br><span class="line">addr = <span class="number">0xFFFF0000F887C800</span></span><br><span class="line">end = <span class="number">0xFFFF0000F8920000</span></span><br><span class="line"><span class="keyword">while</span> addr &lt; end <span class="keyword">and</span> addr != BADADDR:</span><br><span class="line">    <span class="keyword">if</span> isUnknown(GetFlags(addr)):</span><br><span class="line">        add_func(addr)</span><br><span class="line">        addr = NextHead(addr, BADADDR)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        addr = NextAddr(addr)</span><br><span class="line">print(<span class="string">"Done."</span>)</span><br></pre></td></tr></table></figure>
 
 <p>通过fastboot的命令与abl交互，可以获取abl返回输出的字符串信息，通过这些字符串就可以定位到abl中处理对应命令的函数中。再通过全局搜索处理函数的入口地址就可以找到abl中处理fastboot命令的函数映射表：</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/command_struct.png" alt="command_struct.png"></p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/ABL_cmd.png" alt="ABL_cmd.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/command_struct.png?raw=true" alt="command_struct.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/ABL_cmd.png?raw=true" alt="ABL_cmd.png"></p>
 <p>继续回溯和分析这些命令的解析过程，可以找到abl与fasboot之间命令交互的循环函数，以及不断的深入分析挖掘更多功能的函数</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/comman_entry.png" alt="comman_entry.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/comman_entry.png?raw=true" alt="comman_entry.png"></p>
 <p>为了更好的利用漏洞，需要对abl的代码做更多深入的分析，找到一些地址读写的原语(primitives)</p>
 <h3 id="READ-WRITE-Primitives"><a href="#READ-WRITE-Primitives" class="headerlink" title="READ/WRITE Primitives"></a>READ/WRITE Primitives</h3><p>（以下的代码，适用于Android 12的abl，因为需要逆向不少东西，笔者犯懒不想在Android13 的abl上慢慢逆代码了…）</p>
 <p>首先是写原语(write primitives)</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/write_prim0.png" alt="write_prim.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/write_prim0.png?raw=true" alt="write_prim.png"></p>
 <p>这段代码在fastboot与abl的交互命令列表中，通过download命令就可以直接触发到。观察上面的代码，当download_ptr1为空的，写入地址会被设置成0xffff000090700000。也就是说通过fastboot命令可以上传一段代码到这个地址中，在构造ROP chain的时候，劫持PC到这个地址即可执行代码(当然首先需要这段内存空间是可执行的)</p>
 <p>下面是读原语(read primitives)</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/read_prim.png" alt="read_prim.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/04/pixel-bootup/read_prim.png?raw=true" alt="read_prim.png"></p>
 <p>这段代码在fastboot与abl的交互命令列表中，通过upload命令就可以直接触发到。观察下这段代码，当能够控制upload_src以及upload_size就可以将对应的内存数据通过usb传输回来</p>
 <p>至此，对于ABL的静态分析暂时就告一段落了，想要快速找到已经被修复的Nday可以使用bindiff去对比修复前后版本之间的差异，找到修复位置，并以此推理可能存在的Nday利用方法。但实际上，我对着Android 12&amp;13版本的abl对比好久也没能高效的找到修复函数，也许姿势还是略有问题吧….</p>
 <h3 id="定制-fastboot"><a href="#定制-fastboot" class="headerlink" title="定制 fastboot"></a>定制 fastboot</h3><p>在逆向分析到abl处理的fastboot命令中，会有一些不常用的命令(比如download). 这些很可能是一些底层的命令，fastboot在处理用户传入的部分命令会使用到这些接口与abl交互，但这些接口并没有以fastboot命令的形式提供给用户使用，因此，需要定制下fastboot扩展出对应的命令接口。</p>
