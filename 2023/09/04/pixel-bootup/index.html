@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="SecureBoot,Emulation,杂记,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="缘起大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣.  关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exp">
+<meta name="keywords" content="SecureBoot,Emulation,杂记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lean And Emulate Pixel bootloader for Finding Bugs">
+<meta property="og:url" content="http://N1rv0us@github.io/2023/09/04/pixel-bootup/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="缘起大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣.  关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exp">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBoot.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/IDA_config.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/command_struct.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/ABL_cmd.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/comman_entry.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/write_prim0.png">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/read_prim.png">
+<meta property="og:updated_time" content="2023-09-14T18:29:09.858Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lean And Emulate Pixel bootloader for Finding Bugs">
+<meta name="twitter:description" content="缘起大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣.  关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exp">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2023/09/04/pixel-bootup/">
+
+
+
+
+
+  <title>Lean And Emulate Pixel bootloader for Finding Bugs | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2023/09/04/pixel-bootup/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Lean And Emulate Pixel bootloader for Finding Bugs</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-09-04T00:00:00+08:00">
+                2023-09-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="缘起"><a href="#缘起" class="headerlink" title="缘起"></a>缘起</h2><p>大约一两个月前，在某黑底小白X的时候看到了一篇eshard关于pixel6 bootloader研究的推文. 里面提到的bootloader Emulation的部分引起了我的兴趣. </p>
+<p>关于pixel6 bootloader的研究是一套系列文章，作者从“找到已经被修复的bootloader exploit”出发，一步步的介绍了如何快速定位漏洞位置、如何通过模拟执行或是真机调试的方式来调试exploit、如何从任意地址读写最终转化到任意命令执行。</p>
+<p>文章里面并没有公开bootloader的漏洞位置以及exploit代码，但实际上文章中的不少细节也足够定位到漏洞的位置，并且作者公开的使用unicorn模拟执行等一些列代码已经让我受益匪浅了。因此本次我并没有执着于一定要找到这个已经被修复的漏洞位置并利用成功，本文也会更加关注于eshard系列文章作者对于漏洞挖掘思路以及工具使用的记录与思考。</p>
+<h2 id="BootUp-amp-SecureBoot"><a href="#BootUp-amp-SecureBoot" class="headerlink" title="BootUp &amp; SecureBoot"></a>BootUp &amp; SecureBoot</h2><p>首先了解下Pixel 6的启动流程能够帮助更好的找到并理解分析目标的功能作用。<a href="https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/secure-boot-image-authentication_11.30.16.pdf" target="_blank" rel="noopener">高通公开文档</a> 中介绍了SecureBoot的启动以及image之间的认证过程。</p>
+<p>设备厂商会持有一组私钥(private key)并将其公钥存写入bootROM中，并将这些公钥的hash烧写到硬件fuse中确保bootROM中的公钥不会被篡改，这些公钥即可作为设备的信任根。SecureBoot Chain由存放在bootROM中的信任根开始，每个阶段都会遵循镜像加载、RSA认证、执行到下一阶段，以次来保证整个启动流程执行流是没有被篡改的。</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBootChain.png" alt="SecureBootChain.png"></p>
+<p>quarkslab总结了总结了高通SecureBoot的启动过程，如下图:</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/SecureBoot.png" alt="SecureBoot.png"></p>
+<ul>
+<li><p>bootROM中包含了PBL(Primary Boot Loader)部分的流程，是CPU最先加载和执行的代码; 在这里启动错误或是设备重启过程中的选项, 可以进入EDL, 在这个模式下可以刷机(也就是传说中的9008刷机)</p>
+</li>
+<li><p>启动的第二个阶段是SBL(Secondary Boot Loader) 或者叫XBL(eXtended Boot Loader)，在这个阶段会在EL3中加载、验证并执行<strong>Secure Monitor</strong>, <strong>QSEE</strong> (<strong>QTEE</strong>)，成功后会进入EL1中加载ABL(Android Boot Loader)</p>
+</li>
+<li><p>ABL 会按照AVB(Android Verify Boot)的流程验证并执行Android相关的镜像分区，也可以进入fastboot模式，在这个模式下也可以刷机(线刷)</p>
+</li>
+</ul>
+<h2 id="ABL-的逆向分析与定制fastboot"><a href="#ABL-的逆向分析与定制fastboot" class="headerlink" title="ABL 的逆向分析与定制fastboot"></a>ABL 的逆向分析与定制fastboot</h2><p>本次的漏洞是可以通过fastboot完成利用的，因此分析的目标是abl。解压ROM包中的bootloader.img可以使用<a href="http://newandroidbook.com/tools/imjtool.html" target="_blank" rel="noopener">imjtool</a></p>
+<blockquote>
+<p>./imjtool path/to/bootloader.img extract</p>
+</blockquote>
+<p>解压后可以获取到adl文件，通过IDA可以分析，分析时注意选择ARM Little-endian，并配置好ROM 起始地址,  确认ROM的其实地址可以通过先设置成0用IDA解析一下，在起始位置附近找一下，很快就可以确定这个地址。</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/IDA_config.png" alt="IDA_config.png"></p>
+<p>(插句题外话，在Eshard的第一篇文章Pixel 6 BootUp中对Android 12版本rom的abl有非常详细的解析过程，为了不完全照搬Eshard文章的成果本节后续对abl的解析对应的是Android 13版本ROM)</p>
+<p>据说如果使用8.0以上版本的IDA加载abl完成后会自动解析出大部分函数。我手上的IDA并没有那么高的版本，需要搞一段IDA scripts自动生成下function就可以：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> idc </span><br><span class="line"><span class="keyword">import</span> idautils </span><br><span class="line"><span class="keyword">import</span> idaapi </span><br><span class="line"></span><br><span class="line">addr = <span class="number">0xFFFF0000F887C800</span></span><br><span class="line">end = <span class="number">0xFFFF0000F8920000</span></span><br><span class="line"><span class="keyword">while</span> addr &lt; end <span class="keyword">and</span> addr != BADADDR:</span><br><span class="line">    <span class="keyword">if</span> isUnknown(GetFlags(addr)):</span><br><span class="line">        add_func(addr)</span><br><span class="line">        addr = NextHead(addr, BADADDR)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        addr = NextAddr(addr)</span><br><span class="line">print(<span class="string">"Done."</span>)</span><br></pre></td></tr></table></figure>
+
+<p>通过fastboot的命令与abl交互，可以获取abl返回输出的字符串信息，通过这些字符串就可以定位到abl中处理对应命令的函数中。再通过全局搜索处理函数的入口地址就可以找到abl中处理fastboot命令的函数映射表：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/command_struct.png" alt="command_struct.png"></p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/ABL_cmd.png" alt="ABL_cmd.png"></p>
+<p>继续回溯和分析这些命令的解析过程，可以找到abl与fasboot之间命令交互的循环函数，以及不断的深入分析挖掘更多功能的函数</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/comman_entry.png" alt="comman_entry.png"></p>
+<p>为了更好的利用漏洞，需要对abl的代码做更多深入的分析，找到一些地址读写的原语(primitives)</p>
+<h3 id="READ-WRITE-Primitives"><a href="#READ-WRITE-Primitives" class="headerlink" title="READ/WRITE Primitives"></a>READ/WRITE Primitives</h3><p>（以下的代码，适用于Android 12的abl，因为需要逆向不少东西，笔者犯懒不想在Android13 的abl上慢慢逆代码了…）</p>
+<p>首先是写原语(write primitives)</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/write_prim0.png" alt="write_prim.png"></p>
+<p>这段代码在fastboot与abl的交互命令列表中，通过download命令就可以直接触发到。观察上面的代码，当download_ptr1为空的，写入地址会被设置成0xffff000090700000。也就是说通过fastboot命令可以上传一段代码到这个地址中，在构造ROP chain的时候，劫持PC到这个地址即可执行代码(当然首先需要这段内存空间是可执行的)</p>
+<p>下面是读原语(read primitives)</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/pixel-bootup/read_prim.png" alt="read_prim.png"></p>
+<p>这段代码在fastboot与abl的交互命令列表中，通过upload命令就可以直接触发到。观察下这段代码，当能够控制upload_src以及upload_size就可以将对应的内存数据通过usb传输回来</p>
+<p>至此，对于ABL的静态分析暂时就告一段落了，想要快速找到已经被修复的Nday可以使用bindiff去对比修复前后版本之间的差异，找到修复位置，并以此推理可能存在的Nday利用方法。但实际上，我对着Android 12&amp;13版本的abl对比好久也没能高效的找到修复函数，也许姿势还是略有问题吧….</p>
+<h3 id="定制-fastboot"><a href="#定制-fastboot" class="headerlink" title="定制 fastboot"></a>定制 fastboot</h3><p>在逆向分析到abl处理的fastboot命令中，会有一些不常用的命令(比如download). 这些很可能是一些底层的命令，fastboot在处理用户传入的部分命令会使用到这些接口与abl交互，但这些接口并没有以fastboot命令的形式提供给用户使用，因此，需要定制下fastboot扩展出对应的命令接口。</p>
+<p>fastboot的代码是开源的，可以和AOSP一起编译或者在AOSP环境中独立编译模块：</p>
+<blockquote>
+<p>mkdir pixel6 </p>
+<p>repo init -u <a href="https://aosp.tuna.tsinghua.edu.cn/platform/manifest" target="_blank" rel="noopener">https://aosp.tuna.tsinghua.edu.cn/platform/manifest</a> -b android-12.0.0_r32</p>
+<p>repo sync -c –optimized-fetch -j16 #(or more or less) </p>
+<p>source build/envsetup.sh </p>
+<p>godir fastboot # system/core/fastboot </p>
+<p>mma</p>
+</blockquote>
+<p>当然，就算是独立模块编译也是非常耗时的，况且AOSP已经不再支持在MacOS系统上编译，也给编译过程带来不小的麻烦。</p>
+<p>不想麻烦的话，也可以尝试下使用Google提供的<a href="https://github.com/google/python-adb" target="_blank" rel="noopener">python-adb</a>来执行fastboot命令,  从代码上看这个库在python上实现了fastboot/adb协议通信，也就更方便的定制需要的fastboot命令了。</p>
+<h2 id="ABL-Emulation"><a href="#ABL-Emulation" class="headerlink" title="ABL Emulation"></a>ABL Emulation</h2><p>一般在找到漏洞位置之后，搭建好一套用于调试的环境能够更加方便的编写exploit。这也是系列文章里面最吸引我的部分，使用unicorn, keystone, capstone共同模拟运行起abl核心代码。</p>
+<h3 id="keystone-amp-capstone"><a href="#keystone-amp-capstone" class="headerlink" title="keystone &amp; capstone"></a>keystone &amp; capstone</h3><p>这两个工具是很好用的快速指令编译与反编译的python库。</p>
+<p>通过capstone可以实现快捷的指令反汇编：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> capstone</span><br><span class="line"></span><br><span class="line">disassembler = capstone.Cs(capstone.CS_ARCH_ARM64, capstone.CS_MODE_ARM)</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">disas</span><span class="params">(code, addr)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> insn <span class="keyword">in</span> disassembler.disasm(code, addr):</span><br><span class="line">        print(<span class="string">f"addr = 0x<span class="subst">&#123;insn.address&#125;</span>\t opstr = <span class="subst">&#123;insn.op_str&#125;</span>"</span>)</span><br></pre></td></tr></table></figure>
+
+<p>通过keystone可以实现汇编指令的快速编译生成shellcode. (貌似用pwntools的子模块也可以实现类似的功能)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> keystone</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">gen_shellcode</span><span class="params">(data, address)</span>:</span></span><br><span class="line">    ks = keystone.Ks(keystone.KS_ARCH_ARM64, keystone.KS_MODE_LITTLE_ENDIAN)</span><br><span class="line">    ret = ks.asm(data, address)</span><br><span class="line">    <span class="keyword">return</span> bytes(ret[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+
+<h3 id="Unicorn"><a href="#Unicorn" class="headerlink" title="Unicorn"></a>Unicorn</h3><h4 id="一些非常好用的函数"><a href="#一些非常好用的函数" class="headerlink" title="一些非常好用的函数"></a>一些非常好用的函数</h4><ul>
+<li>打印调用栈：</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_stack</span><span class="params">(uc:Uc, num=<span class="number">20</span>)</span>:</span></span><br><span class="line">    sp = uc.reg_read(UC_ARM64_REG_SP)</span><br><span class="line">    print(<span class="string">f"## STACK DUMP ##\nSP: <span class="subst">&#123;sp:x&#125;</span>"</span>)</span><br><span class="line">    <span class="keyword">for</span> idx, stack <span class="keyword">in</span> enumerate(range(sp,sp+num*<span class="number">8</span>,<span class="number">8</span>)):</span><br><span class="line">        <span class="keyword">if</span> sp != <span class="number">0</span>:</span><br><span class="line">            v = struct.unpack(<span class="string">'Q'</span>, uc.mem_read(stack, <span class="number">8</span>))[<span class="number">0</span>]</span><br><span class="line">            print(<span class="string">f"@<span class="subst">&#123;stack:x&#125;</span> <span class="subst">&#123;v:x&#125;</span> - #<span class="subst">&#123;idx*<span class="number">8</span>:x&#125;</span>"</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> idx &gt;=num:</span><br><span class="line">            <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>打印寄存器信息(for ARM64)</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_regs</span><span class="params">(uc:Uc)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> reg <span class="keyword">in</span> [<span class="string">"X0"</span>,<span class="string">"X1"</span>,<span class="string">"X2"</span>,<span class="string">"X3"</span>,<span class="string">"X8"</span>,<span class="string">"X19"</span>,<span class="string">"X20"</span>,<span class="string">"X21"</span>,<span class="string">"X22"</span>,<span class="string">"X23"</span>,<span class="string">"X24"</span>,<span class="string">"X28"</span>,<span class="string">"X29"</span>,<span class="string">"X30"</span>,<span class="string">"SP"</span>,<span class="string">"PC"</span>]:</span><br><span class="line">        val = eval(<span class="string">f"uc.reg_read(UC_ARM64_REG_<span class="subst">&#123;reg&#125;</span>)"</span>)</span><br><span class="line">        print(<span class="string">f"<span class="subst">&#123;reg&#125;</span> - <span class="subst">&#123;val:<span class="number">8</span>X&#125;</span>"</span>,end=<span class="string">" "</span>)</span><br><span class="line">    print(<span class="string">""</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>自动修复缺页异常</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">hook_mem_invalid</span><span class="params">(uc:Uc, uc_mem_type, addr,size, value, user_data)</span>:</span></span><br><span class="line">    PAGE_SIZE=<span class="number">10</span>*<span class="number">1024</span>*<span class="number">1024</span></span><br><span class="line">    pc = uc.reg_read(UC_ARM64_REG_PC)</span><br><span class="line">    start = addr &amp; ~(PAGE_SIZE - <span class="number">1</span>)</span><br><span class="line">    uc.mem_map(start, PAGE_SIZE)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">uc.hook_add(UC_HOOK_MEM_INVALID, hook_mem_invalid)</span><br></pre></td></tr></table></figure>
+
+<h4 id="逆向ABL获取的一些列地址"><a href="#逆向ABL获取的一些列地址" class="headerlink" title="逆向ABL获取的一些列地址"></a>逆向ABL获取的一些列地址</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">fastboot_read = 0xFFFF0000F8871408</span><br><span class="line">download_buffer = 0xffff000090700000</span><br><span class="line">__debug_stdio_write = 0xFFFF0000F88A6D5C</span><br><span class="line">fastboot_write = 0xFFFF0000F8871484</span><br><span class="line">pixel_loader_entry_run = 0xFFFF0000F8813D74</span><br><span class="line">stop_fastboot = 0xFFFF0000F8ACBD20</span><br><span class="line"></span><br><span class="line">ABL_LOAD_ADDRESS = 0xFFFF0000F8800000</span><br><span class="line">MEMORY_START = 0xFFFF0000F8000000</span><br><span class="line">MEMORY_SIZE = 200*1024*1024</span><br><span class="line">STACK_START = MEMORY_START + MEMORY_SIZE - 0x1000</span><br><span class="line">PAGE_SIZE = 10*1024*1024</span><br></pre></td></tr></table></figure>
+
+<h4 id="利用地址启动Unicorn"><a href="#利用地址启动Unicorn" class="headerlink" title="利用地址启动Unicorn"></a>利用地址启动Unicorn</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">        mu = Uc(UC_ARCH_ARM64, UC_MODE_ARM)</span><br><span class="line"></span><br><span class="line">        mu.mem_map(MEMORY_START, MEMORY_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xd8000000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xf8200000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xffffffff19200000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xfffffffff8200000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xffff000080000000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xffff000002000000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(<span class="number">0xffffffff10000000</span>, PAGE_SIZE)</span><br><span class="line">        mu.mem_map(download_buffer,<span class="number">1024</span>*<span class="number">1024</span>*<span class="number">5</span>) <span class="comment">#download buffer</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        mu.hook_add(UC_HOOK_MEM_INVALID, hook_mem_invalid)</span><br><span class="line">        mu.hook_add(UC_HOOK_CODE, hook_fastboot_read, begin=fastboot_read,end=fastboot_read)</span><br><span class="line">        mu.hook_add(UC_HOOK_CODE, hook_stdio_write, begin=__debug_stdio_write,end=__debug_stdio_write)</span><br><span class="line">        mu.hook_add(UC_HOOK_CODE, hook_fastboot_write, begin=fastboot_write,end=fastboot_write)</span><br><span class="line"><span class="keyword">except</span> UcError <span class="keyword">as</span> e:</span><br><span class="line">        print(<span class="string">f"UcError ==&gt; <span class="subst">&#123;e&#125;</span>"</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结体验"><a href="#总结体验" class="headerlink" title="总结体验"></a>总结体验</h3><p>相比于qemu，通过unicorn实际上只能从某些函数为入口，运行部分代码功能。如果这部分代码的执行对整体的运行时环境没有太多的依赖的话，是个不错的代码调试方式。但是这需要对整体的代码功能理解有更高的要求。</p>
+<p>个人感觉unicorn比较适合于一些简单执行流的调试或是一些小固件的模拟执行，通过unicorn也可以在设计exploit chain过程中，对每个模块独立调试。后续有机会的话，善用起来会是很不错的脚手架工具。</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ul>
+<li><p>pixel6 bootloader PART I : <a href="https://eshard.com/posts/pixel6_bootloader" target="_blank" rel="noopener">https://eshard.com/posts/pixel6_bootloader</a></p>
+</li>
+<li><p>pixel6 bootloader PART II : <a href="https://eshard.com/posts/pixel6bootloader-2" target="_blank" rel="noopener">Pixel 6 bootloader: Emulation, ROP</a></p>
+</li>
+<li><p>pixel6 bootloader PART III : <a href="https://eshard.com/posts/pixel6_bootloader_3" target="_blank" rel="noopener">Pixel 6 Bootloader: Exploitation (part 3)</a></p>
+</li>
+<li><p>eshard 配套blog的代码 : <a href="https://github.com/eshard/pixel6-boot/tree/main" target="_blank" rel="noopener">GitHub - eshard/pixel6-boot</a></p>
+</li>
+<li><p>Quarkslab 关于高通SecureBoot的介绍 &amp; Nexus 6P的破解过程：<a href="https://blog.quarkslab.com/analysis-of-qualcomm-secure-boot-chains.html" target="_blank" rel="noopener">https://blog.quarkslab.com/analysis-of-qualcomm-secure-boot-chains.html</a></p>
+</li>
+<li><p>Unicorn : <a href="https://www.unicorn-engine.org/docs/tutorial.html" target="_blank" rel="noopener">Programming with C &amp; Python languages – Unicorn – The Ultimate CPU emulator</a></p>
+</li>
+<li><p>capstone : <a href="https://www.capstone-engine.org/lang_python.html" target="_blank" rel="noopener">Programming with Python language – Capstone – The Ultimate Disassembler</a></p>
+</li>
+<li><p>keystone : <a href="https://www.keystone-engine.org/docs/" target="_blank" rel="noopener">Documentation – Keystone – The Ultimate Assembler</a></p>
+</li>
+<li><p>ropper : <a href="https://scoding.de/ropper/" target="_blank" rel="noopener">https://scoding.de/ropper/</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/SecureBoot/" rel="tag"># SecureBoot</a>
+          
+            <a href="/tags/Emulation/" rel="tag"># Emulation</a>
+          
+            <a href="/tags/杂记/" rel="tag"># 杂记</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/08/08/CVE-2022-0847复现与学习/" rel="next" title="CVE-2022-0847 DirtyPipe复现与学习">
+                <i class="fa fa-chevron-left"></i> CVE-2022-0847 DirtyPipe复现与学习
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#缘起"><span class="nav-number">1.</span> <span class="nav-text">缘起</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BootUp-amp-SecureBoot"><span class="nav-number">2.</span> <span class="nav-text">BootUp &amp; SecureBoot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ABL-的逆向分析与定制fastboot"><span class="nav-number">3.</span> <span class="nav-text">ABL 的逆向分析与定制fastboot</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#READ-WRITE-Primitives"><span class="nav-number">3.1.</span> <span class="nav-text">READ/WRITE Primitives</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制-fastboot"><span class="nav-number">3.2.</span> <span class="nav-text">定制 fastboot</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ABL-Emulation"><span class="nav-number">4.</span> <span class="nav-text">ABL Emulation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#keystone-amp-capstone"><span class="nav-number">4.1.</span> <span class="nav-text">keystone &amp; capstone</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unicorn"><span class="nav-number">4.2.</span> <span class="nav-text">Unicorn</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一些非常好用的函数"><span class="nav-number">4.2.1.</span> <span class="nav-text">一些非常好用的函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#逆向ABL获取的一些列地址"><span class="nav-number">4.2.2.</span> <span class="nav-text">逆向ABL获取的一些列地址</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#利用地址启动Unicorn"><span class="nav-number">4.2.3.</span> <span class="nav-text">利用地址启动Unicorn</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结体验"><span class="nav-number">4.3.</span> <span class="nav-text">总结体验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">5.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
