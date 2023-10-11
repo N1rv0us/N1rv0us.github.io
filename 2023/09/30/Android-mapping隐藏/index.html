@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Android Resist,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="缘起在Android APP中隐藏部分native so文件在 /proc/self/maps 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否">
+<meta name="keywords" content="Android,Android Resist">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于在Android Mapping中隐藏 Native 库映射">
+<meta property="og:url" content="http://N1rv0us@github.io/2023/09/30/Android-mapping隐藏/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="缘起在Android APP中隐藏部分native so文件在 /proc/self/maps 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png">
+<meta property="og:updated_time" content="2023-10-11T18:35:14.544Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于在Android Mapping中隐藏 Native 库映射">
+<meta name="twitter:description" content="缘起在Android APP中隐藏部分native so文件在 /proc/self/maps 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否">
+<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2023/09/30/Android-mapping隐藏/">
+
+
+
+
+
+  <title>关于在Android Mapping中隐藏 Native 库映射 | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2023/09/30/Android-mapping隐藏/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">关于在Android Mapping中隐藏 Native 库映射</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-09-30T00:00:00+08:00">
+                2023-09-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="缘起"><a href="#缘起" class="headerlink" title="缘起"></a>缘起</h2><p>在Android APP中隐藏部分native so文件在 <code>/proc/self/maps</code> 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否还能够被正常的调用到等等都不明了。</p>
+<p>恰巧不久之后，github就给我推送了Android-Library-Remap-Hide项目，正好可以基于这个项目探究下隐藏native so mapping信息的原理并且扩展一些对抗策略的研究</p>
+<p>老样子本文涉及到的代码可以下面的链接中获取：</p>
+<ul>
+<li><a href="https://github.com/N1rv0us/android-resists/tree/main/remapping" target="_blank" rel="noopener">https://github.com/N1rv0us/android-resists/tree/main/remapping</a> </li>
+</ul>
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><p>remapping的核心功能全部在 <a href="https://github.com/N1rv0us/android-resists/blob/main/remapping/Android-Library-Remap-Hide/app/src/main/jni/RemapTools.h" target="_blank" rel="noopener">RemapTools.h</a> 中实现；</p>
+<p>首先是从<code>/proc/self/maps</code>中获取当前进程目标native lib的内存映射以及读写权限：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;ProcMapInfo&gt; ListModulesWithName(<span class="built_in">std</span>::<span class="built_in">string</span> name) &#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;ProcMapInfo&gt; returnVal;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> buffer[<span class="number">512</span>];</span><br><span class="line">    FILE *fp = fopen(<span class="string">"/proc/self/maps"</span>, <span class="string">"re"</span>);</span><br><span class="line">    <span class="keyword">if</span> (fp != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="keyword">while</span> (fgets(buffer, <span class="keyword">sizeof</span>(buffer), fp)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">strstr</span>(buffer, name.c_str())) &#123;</span><br><span class="line">                ProcMapInfo info&#123;&#125;;</span><br><span class="line">                <span class="keyword">char</span> perms[<span class="number">10</span>];</span><br><span class="line">                <span class="keyword">char</span> path[<span class="number">255</span>];</span><br><span class="line">                <span class="keyword">char</span> dev[<span class="number">25</span>];</span><br><span class="line"></span><br><span class="line">                <span class="built_in">sscanf</span>(buffer, <span class="string">"%lx-%lx %s %ld %s %ld %s"</span>, &amp;info.start, &amp;info.end, perms, &amp;info.offset, dev, &amp;info.inode, path);</span><br><span class="line"></span><br><span class="line">                <span class="comment">//Process Perms</span></span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strchr</span>(perms, <span class="string">'r'</span>)) info.perms |= PROT_READ;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strchr</span>(perms, <span class="string">'w'</span>)) info.perms |= PROT_WRITE;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strchr</span>(perms, <span class="string">'x'</span>)) info.perms |= PROT_EXEC;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strchr</span>(perms, <span class="string">'r'</span>)) info.perms |= PROT_READ;</span><br><span class="line"></span><br><span class="line">                <span class="comment">//Set all other information</span></span><br><span class="line">                info.dev = dev;</span><br><span class="line">                info.path = path;</span><br><span class="line"></span><br><span class="line">                LOGI(<span class="string">"Line: %s"</span>, buffer);</span><br><span class="line">                returnVal.push_back(info);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> returnVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完成目标内存映射信息的采集后，就可以依次remapping掉对应的内存部分完成隐藏了</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">RemapLibrary</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">string</span> name)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;ProcMapInfo&gt; maps = ListModulesWithName(name);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (ProcMapInfo info : maps) &#123;</span><br><span class="line">        <span class="keyword">void</span> *address = (<span class="keyword">void</span> *)info.start;</span><br><span class="line">        <span class="keyword">size_t</span> size = info.end - info.start;</span><br><span class="line">        <span class="keyword">void</span> *<span class="built_in">map</span> = mmap(<span class="number">0</span>, size, PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, <span class="number">-1</span>, <span class="number">0</span>);  <span class="comment">// 1</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((info.perms &amp; PROT_READ) == <span class="number">0</span>) &#123;</span><br><span class="line">            LOGI(<span class="string">"Removing protection: %s"</span>, info.path);</span><br><span class="line">            mprotect(address, size, PROT_READ); <span class="comment">// 2</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">map</span> == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            LOGE(<span class="string">"Failed to Allocate Memory: %s"</span>, strerror(errno));</span><br><span class="line">        &#125;</span><br><span class="line">        LOGI(<span class="string">"Allocated at address %p with size of %zu"</span>, <span class="built_in">map</span>, size);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//Copy to new location</span></span><br><span class="line">        <span class="built_in">std</span>::memmove(<span class="built_in">map</span>, address, size); <span class="comment">// 3</span></span><br><span class="line">        mremap(<span class="built_in">map</span>, size, size, MREMAP_MAYMOVE | MREMAP_FIXED, info.start); <span class="comment">// 4</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">//Reapply protection</span></span><br><span class="line">        mprotect((<span class="keyword">void</span> *)info.start, size, info.perms); <span class="comment">// 5</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>大体上分成了以下5个步骤：</p>
+<ol>
+<li><p>申请一块与remapping区域相同大小的内存空间；</p>
+</li>
+<li><p>判断下remapping区域是否可读，如果不可读就通过<code>mprotect</code>将其设置为可读区域，确保这部分区域可以被拷贝到匿名内存中；</p>
+</li>
+<li><p>拷贝remapping区域到申请的匿名内存中；</p>
+</li>
+<li><p>通过<code>mremap</code> 将申请的匿名内存映射到需要remapping的地址；</p>
+</li>
+<li><p>恢复原本内存段的读写权限；</p>
+</li>
+</ol>
+<p>代码非常的简洁明了，封装成函数后，调用就可以将native lib隐藏到匿名内存的同时也不影响lib的正常运行；</p>
+<p>值得关注的还有之前没怎么用到过的<code>mremap</code> , 这是个libc中的标准函数，功能描述如下：</p>
+<blockquote>
+<pre><code>**mremap**() expands (or shrinks) an existing memory mapping,
+potentially moving it at the same time (controlled by the *flags*
+argument and the available virtual address space).
+*old_address* is the old address of the virtual memory block that
+you want to expand (or shrink).  Note that *old_address* has to be
+page aligned.  *old_size* is the old size of the virtual memory
+block.  *new_size* is the requested size of the virtual memory
+block after the resize.  An optional fifth argument, *new_address*,
+may be provided; see the description of **MREMAP_FIXED** below.
+If the value of *old_size* is zero, and *old_address* refers to a
+shareable mapping (see [mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html) **MAP_SHARED**), then **mremap**() will
+create a new mapping of the same pages.  *new_size* will be the
+size of the new mapping and the location of the new mapping may
+be specified with *new_address*; see the description of
+**MREMAP_FIXED** below.  If a new mapping is requested via this
+method, then the **MREMAP_MAYMOVE** flag must also be specified.
+The *flags* bit-mask argument may be 0, or include the following
+flags:</code></pre></blockquote>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><h3 id="frida-hook"><a href="#frida-hook" class="headerlink" title="frida hook"></a>frida hook</h3><p>虽然一些恶意的程序可以通过remapping匿名化一些native lib在proc maps中的展示，但是我更想知道这种操作会不会影响到frida去hook里面的函数。</p>
+<p>在验证之前，我的猜想是remapping并不会让frida hook不到目标函数，因为remapping后程序是能够继续调用到原本native lib中的函数的，而且从原理上来看原本库中所有的函数地址都没有发生变化；但是可能会需要额外想办法去定位下隐藏的native lib的映射基地址。然而测试结果却让我大为震惊。</p>
+<p>我在一台Android 12的Pixel 6上，使用Frida 15.1.14做的验证</p>
+<p>在Demo APP中实际上是隐藏了两个native lib，一个是包含JNI接口的libRevenyInjector.so, 另一个是通过dlopen加载的libTest.so</p>
+<p>在隐藏了这两个native lib之后，挂载frida，我惊奇的发现Process.getModuleByName仍然可以找到它们：</p>
+<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png" alt="1.png"></p>
+<p>笑死，居然只是个障眼法….</p>
+<p>既然都能展示Module信息也就一定可以正常的hook或是主动调用了。原本想的getModuleByName没办法定位隐藏模块的基址的应对方案也就没有深入测试下去的必要了，也就只是两个思路罢了：</p>
+<ul>
+<li><p>remapping的前提是需要知道目标内存段的起始&amp;终止地址，这些需要从<code>/proc/self/maps</code>中获取；frida &amp; ebpf hook文件的读写不是难事，在读取的maps中也一定会有被隐藏的native lib信息；</p>
+</li>
+<li><p>hook libc中的mremap函数，这是隐藏功能实现的核心函数，调用的参数就有native lib的基地址；即使通过svc直接实现mremap，通过Frida &amp; ebpf 仍然可以hook，最多是多几行代码；</p>
+</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>通过remapping的方式, 确实能混淆安全研究员对一些关键库的关注；但是对frida hook基本没有任何的影响。当然也可能是remapping的方法不行，还是有些新招式能够影响到frida的。同时也说明了frida很可能并不是通过 <code>/proc/self/maps</code> 来获取modules列表的；</p>
+<p>除此之外，这种招式对于APP进程本身检查自身的加载native lib也会有些影响，比如Xposed模块 &amp; 注入的frida so完全可以用这种方式隐藏下，来规避一些检测；</p>
+<p>总之，这个问题仍然还有许多继续深入研究下去的点，就等之后有机会再说吧。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><p><a href="https://github.com/reveny/Android-Library-Remap-Hide" target="_blank" rel="noopener">GitHub - reveny/Android-Library-Remap-Hide: Remap a library to avoid detection</a></p>
+</li>
+<li><p><a href="https://man7.org/linux/man-pages/man2/mprotect.2.html" target="_blank" rel="noopener">mprotect(2) - Linux manual page</a></p>
+</li>
+<li><p><a href="https://man7.org/linux/man-pages/man2/mremap.2.html" target="_blank" rel="noopener">mremap(2) - Linux manual page</a></p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Android-Resist/" rel="tag"># Android Resist</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/09/04/pixel-bootup/" rel="next" title="Lean And Emulate Pixel bootloader for Finding Bugs">
+                <i class="fa fa-chevron-left"></i> Lean And Emulate Pixel bootloader for Finding Bugs
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#缘起"><span class="nav-number">1.</span> <span class="nav-text">缘起</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现原理"><span class="nav-number">2.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试"><span class="nav-number">3.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#frida-hook"><span class="nav-number">3.1.</span> <span class="nav-text">frida hook</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
