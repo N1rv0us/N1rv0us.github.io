@@ -87,12 +87,12 @@
 <meta property="og:site_name" content="失眠想睡觉的blog">
 <meta property="og:description" content="缘起在Android APP中隐藏部分native so文件在 /proc/self/maps 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否">
 <meta property="og:locale" content="cn">
-<meta property="og:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png">
-<meta property="og:updated_time" content="2023-10-11T18:35:14.544Z">
+<meta property="og:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/30/Android-mapping%E9%9A%90%E8%97%8F/1.png?raw=true">
+<meta property="og:updated_time" content="2023-10-11T18:37:11.440Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="关于在Android Mapping中隐藏 Native 库映射">
 <meta name="twitter:description" content="缘起在Android APP中隐藏部分native so文件在 /proc/self/maps 中的展示是个非常有趣的课题。前段时间在和某dalao讨论某恶意应用就存在着这种行为，当时我脑子中第一个想法就是将原本通过dlopen等方式打开的native so文件重新映射为匿名内存。但是这只是一个很模糊的想法，很多细节比如能否将匿名内存重新mapping到原本的基地址、在匿名内存中一些JNI接口是否">
-<meta name="twitter:image" content="http://N1rv0us@github.io/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png">
+<meta name="twitter:image" content="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/30/Android-mapping%E9%9A%90%E8%97%8F/1.png?raw=true">
 
 
 
@@ -354,7 +354,7 @@ flags:</code></pre></blockquote>
 <p>我在一台Android 12的Pixel 6上，使用Frida 15.1.14做的验证</p>
 <p>在Demo APP中实际上是隐藏了两个native lib，一个是包含JNI接口的libRevenyInjector.so, 另一个是通过dlopen加载的libTest.so</p>
 <p>在隐藏了这两个native lib之后，挂载frida，我惊奇的发现Process.getModuleByName仍然可以找到它们：</p>
-<p><img src="/Users/listennter/blog/N1rv0us.github.io/source/_posts/Android-mapping%E9%9A%90%E8%97%8F/1.png" alt="1.png"></p>
+<p><img src="https://github.com/N1rv0us/N1rv0us.github.io/blob/master/2023/09/30/Android-mapping%E9%9A%90%E8%97%8F/1.png?raw=true" alt="1.png"></p>
 <p>笑死，居然只是个障眼法….</p>
 <p>既然都能展示Module信息也就一定可以正常的hook或是主动调用了。原本想的getModuleByName没办法定位隐藏模块的基址的应对方案也就没有深入测试下去的必要了，也就只是两个思路罢了：</p>
 <ul>
