@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="记录一次有趣的 Frida Hook 调试Created by: N1rv0us ZhangCreated time: May 10, 2024 11:48 PMTags: android, debugger, essays 起初 最近需要调试一个比较特殊的 app 子进程。虽然我一直感觉frida对Android app的子进程调试有些缺陷，但是由于这次需要调试 Native 的代码，我还是习惯">
+<meta property="og:type" content="article">
+<meta property="og:title" content="失眠想睡觉的blog">
+<meta property="og:url" content="http://N1rv0us@github.io/2024/05/29/Enjoy_Frida_Debug/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="记录一次有趣的 Frida Hook 调试Created by: N1rv0us ZhangCreated time: May 10, 2024 11:48 PMTags: android, debugger, essays 起初 最近需要调试一个比较特殊的 app 子进程。虽然我一直感觉frida对Android app的子进程调试有些缺陷，但是由于这次需要调试 Native 的代码，我还是习惯">
+<meta property="og:locale" content="cn">
+<meta property="og:updated_time" content="2024-05-28T16:37:18.011Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="失眠想睡觉的blog">
+<meta name="twitter:description" content="记录一次有趣的 Frida Hook 调试Created by: N1rv0us ZhangCreated time: May 10, 2024 11:48 PMTags: android, debugger, essays 起初 最近需要调试一个比较特殊的 app 子进程。虽然我一直感觉frida对Android app的子进程调试有些缺陷，但是由于这次需要调试 Native 的代码，我还是习惯">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2024/05/29/Enjoy_Frida_Debug/">
+
+
+
+
+
+  <title> | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2024/05/29/Enjoy_Frida_Debug/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-05-29T00:37:18+08:00">
+                2024-05-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="记录一次有趣的-Frida-Hook-调试"><a href="#记录一次有趣的-Frida-Hook-调试" class="headerlink" title="记录一次有趣的 Frida Hook 调试"></a>记录一次有趣的 Frida Hook 调试</h1><p>Created by: N1rv0us Zhang<br>Created time: May 10, 2024 11:48 PM<br>Tags: android, debugger, essays</p>
+<h1 id="起初"><a href="#起初" class="headerlink" title="起初"></a>起初</h1><p> 最近需要调试一个比较特殊的 app 子进程。虽然我一直感觉frida对Android app的子进程调试有些缺陷，但是由于这次需要调试 Native 的代码，我还是习惯的把直接把frida attach到进程上；瞬间调试的目标进程崩溃了 …</p>
+<p>哦？什么原因呢？被反调干掉了？还是有其他问题导致程序崩溃呢 ….</p>
+<p>通常遇到 Frida 挂不上去的情况，我都会选择另辟蹊径，比如在主进程上找找进程间通信把问题解决了，不会正面硬刚。但这次要求必须调试这个该死的进程，于是，很多在平常看 blog 学到的技术第一次组合应用到了实践中。非常值得记录一番。</p>
+<h1 id="失败的尝试"><a href="#失败的尝试" class="headerlink" title="失败的尝试"></a>失败的尝试</h1><blockquote>
+<p>虽然是失败了，但是也有很多不错的内容喔 ～</p>
+</blockquote>
+<p>我先是想到可能是 <code>frida-server</code> 触发了一些异常。因为这算是最傻瓜式的 frida 调试方法了，随便一个最基本的反调试都会识别，同时 <code>frida-server</code> 的超高可用性也会向调试目标进程加入一堆不太必要的操作，这些操作也可能会让一个脆弱的子进程崩溃；</p>
+<p>那么，我们尝试简化下 <code>frida-server</code> 注入进程的逻辑；改为直接把 frida-gadget 注入到目标进程里面后连接 PC 上的 frida-client</p>
+<p>操作方法可以选择重打包目标 app 就和在 nonRoot 环境中使用 frida 的操作一致。我这次选择了另一种方案，直接通过一个小工具把 frida-gadget 注入到目标进程的内存中，免去重打包的操作：</p>
+<blockquote>
+<p>我在平常乱翻 blog 的时候发现的一个不错的工具，用 Rust 编写的；无论是内存注入的思路还是代码实现都十分的优雅。Nice</p>
+</blockquote>
+<p><a href="https://github.com/erfur/linjector-rs" target="_blank" rel="noopener">https://github.com/erfur/linjector-rs</a></p>
+<p>第一次使用 frida-gadget 遇到了个小坑，其使用和 frida-server 还是有些区别的，在 Frida 官方文档中也有使用说明：</p>
+<p><a href="https://frida.re/docs/gadget/" target="_blank" rel="noopener">Gadget</a></p>
+<p>frida-gadget 的运行需要两个文件，一个从官网下载的对应架构的 frida-gadget.so，另一个为配置文件：</p>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lib</span><br><span class="line">└── arm64-v8a</span><br><span class="line">    ├── libgadget.config.so</span><br><span class="line">    ├── libgadget.so</span><br></pre></td></tr></table></figure>
+
+<p>内存注入时只需注入 <a href="http://libgadget.so" target="_blank" rel="noopener"><code>libgadget.so</code></a> 即可，它会在当前目录下加载对应的config；因此 <a href="http://frida-gadget.so" target="_blank" rel="noopener">frida-gadget.so</a> 与其config的名称必须是按照格式匹配的；</p>
+<p>config 按照如下的格式编写, 参数解析看官方文档即可：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"interaction"</span>: &#123;</span><br><span class="line">    <span class="attr">"type"</span>: <span class="string">"listen"</span>,</span><br><span class="line">    <span class="attr">"address"</span>: <span class="string">"127.0.0.1"</span>,</span><br><span class="line">    <span class="attr">"port"</span>: <span class="number">27042</span>,</span><br><span class="line">    <span class="attr">"on_port_conflict"</span>: <span class="string">"fail"</span>,</span><br><span class="line">    <span class="attr">"on_load"</span>: <span class="string">"wait"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然而，一顿操作把 frida-gadget 注入到目标进程之后，进程还是崩溃了；</p>
+<p>Shit 怀疑人生开始了，我到底注入成功了没有？难不成真的遇到了顶级反 Frida ？</p>
+<h1 id="什么触发了-Crash"><a href="#什么触发了-Crash" class="headerlink" title="什么触发了 Crash"></a>什么触发了 Crash</h1><p>到这里我还是没搞明白，是什么导致了挂在 frida 的过程中必然 crash。但实际上无非两种大的思路：</p>
+<ol>
+<li>被反调试之类的安全机制发现了，直接 kill 掉了进程；</li>
+<li>frida 自己把进程搞崩了；</li>
+</ol>
+<p>于是，我向大哥咨询，大哥给了我一个很重要的 Hint :</p>
+<blockquote>
+<p>这个进程不允许有 I/O 操作，只要有 I/O 类型的操作，就会马上 crash !</p>
+</blockquote>
+<p>有了这个 hint 之后，我补充了一些测试，发现这个进程实际上是没有反调试的。崩溃的原因就是 frida 的运行导致了进程 crash .</p>
+<p>那么反思一下，frida的注入过程中会触发 I/O 类型的操作么？答案是肯定的：</p>
+<ul>
+<li>frida-server 也需要把 frida-gadget 注入到目标进程，虽然不记得具体流程，但也很容易触发到crash;</li>
+<li>直接注入 frida-gadget 的尝试，其功能的实现必须要读取当前目录下的文件，必然会有 I/O</li>
+</ul>
+<p>此时，我需要一个不会有任何 I/O 行为的 Frida.</p>
+<h1 id="柳暗花明"><a href="#柳暗花明" class="headerlink" title="柳暗花明"></a>柳暗花明</h1><p>那么，我要使用一个最小化运行 frida 的方式 —— 打包一个 frida-gum 到一个 Native so 文件中，然后使用前文的 <strong>linjector-rs</strong> 注入到目标进程中；</p>
+<p>这里同样是使用以前玩过的一个不错的开源项目 FGum :</p>
+<p><a href="https://github.com/SeeFlowerX/FGum" target="_blank" rel="noopener">https://github.com/SeeFlowerX/FGum</a></p>
+<p>直接将需要执行的 frida-script 也编入Native so中，这样 frida-script 会一起直接加载到内存中，执行结果重定向到 logcat 中，就避免了 I/O 操作；</p>
+<p>当然，需要在 <code>.init_array</code> 或者 <code>constructor</code> 中加载 frida-script，以保证注入的脚本能正常跑起来。</p>
+<blockquote>
+<p>虽然这里写的很轻松，但是，实现代码的时候还是提笔忘字Google了半天，所以呀，趁这个机会在强化下记忆吧 …</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">preinit</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv, <span class="keyword">char</span> **envp)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv, <span class="keyword">char</span> **envp)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">fini</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">__attribute__((section(<span class="string">".init_array"</span>))) typeof(init) *__init = init;</span><br><span class="line">__attribute__((section(<span class="string">".preinit_array"</span>))) typeof(preinit) *__preinit = preinit;</span><br><span class="line">__attribute__((section(<span class="string">".fini_array"</span>))) typeof(fini) *__fini = fini;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> __attribute__ ((constructor)) constructor() &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> __attribute__ ((constructor)) constructor_2() &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">void</span> __attribute__ ((destructor)) destructor() &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> __attribute__ ((destructor)) destructor_2() &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">my_atexit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">my_atexit2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    atexit(my_atexit);</span><br><span class="line">    atexit(my_atexit2);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>,__FUNCTION__);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>函数间触发顺序为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># ./test</span><br><span class="line">preinit</span><br><span class="line">init</span><br><span class="line">constructor_2</span><br><span class="line">constructor</span><br><span class="line">main</span><br><span class="line">my_atexit2</span><br><span class="line">my_atexit</span><br><span class="line">destructor</span><br><span class="line">destructor_2</span><br><span class="line">fini</span><br></pre></td></tr></table></figure>
+
+<p>测试中发现，在 .init_array session 中触发函数还是会莫名的崩溃，于是使用了 constructor ；</p>
+<ul>
+<li>Final Code Below ：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">my_init_func</span><span class="params">(<span class="keyword">void</span>)</span> __<span class="title">attribute__</span><span class="params">((constructor))</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">my_init_func</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    LOGD(<span class="string">"[N1rv0us] frida gum so loaded success !"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* js = <span class="string">"console.log('easy test for frida script ...')"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> status = gumjsHook(js);</span><br><span class="line">    LOGD(<span class="string">"[N1rv0us] gumjs hook status ==&gt; %d"</span>, status);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">hookFunc</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *scriptpath)</span> </span>&#123;</span><br><span class="line">    LOGD (<span class="string">"[*] gumjsHook()"</span>);</span><br><span class="line">    gum_init_embedded();</span><br><span class="line">    backend = gum_script_backend_obtain_qjs();</span><br><span class="line"><span class="comment">//    char *js = readfile(scriptpath);</span></span><br><span class="line"><span class="comment">//    if (!js) &#123;</span></span><br><span class="line"><span class="comment">//        return 1;</span></span><br><span class="line"><span class="comment">//    &#125;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *js = scriptpath;</span><br><span class="line"></span><br><span class="line">    script = gum_script_backend_create_sync(backend, <span class="string">"example"</span>, js, <span class="literal">NULL</span>, cancellable, &amp;error);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译完成之后，把 Native so 用 linjector-rs 注入到目标进程。正常输出了 frida-script 打印的日志；</p>
+<p>Ok, 大功告成，搞定，下班儿 ～</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/09/30/Android-mapping隐藏/" rel="next" title="关于在Android Mapping中隐藏 Native 库映射">
+                <i class="fa fa-chevron-left"></i> 关于在Android Mapping中隐藏 Native 库映射
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2024/05/29/PaperStudy_Learning_from_Mistakes/" rel="prev" title>
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#记录一次有趣的-Frida-Hook-调试"><span class="nav-number">1.</span> <span class="nav-text">记录一次有趣的 Frida Hook 调试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#起初"><span class="nav-number">2.</span> <span class="nav-text">起初</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#失败的尝试"><span class="nav-number">3.</span> <span class="nav-text">失败的尝试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么触发了-Crash"><span class="nav-number">4.</span> <span class="nav-text">什么触发了 Crash</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#柳暗花明"><span class="nav-number">5.</span> <span class="nav-text">柳暗花明</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

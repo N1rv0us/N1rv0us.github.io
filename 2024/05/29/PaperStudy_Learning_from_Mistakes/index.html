@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="PaperStudy Learning from MistakesCreated by: N1rv0us ZhangCreated time: May 26, 2024 11:08 AMTags: appreciate, concurrent, non-professional, paper, system 序言上周回长沙和我的恩师们约饭交流，席间陈老师反复提到了 YY 团队的一篇经典论文；说来惭">
+<meta property="og:type" content="article">
+<meta property="og:title" content="失眠想睡觉的blog">
+<meta property="og:url" content="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="PaperStudy Learning from MistakesCreated by: N1rv0us ZhangCreated time: May 26, 2024 11:08 AMTags: appreciate, concurrent, non-professional, paper, system 序言上周回长沙和我的恩师们约饭交流，席间陈老师反复提到了 YY 团队的一篇经典论文；说来惭">
+<meta property="og:locale" content="cn">
+<meta property="og:image" content="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/PaperStudy%20Learning%20from%20Mistakes%20b923d8063afb4c669abedece1d2915dd/Untitled.png">
+<meta property="og:image" content="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/PaperStudy%20Learning%20from%20Mistakes%20b923d8063afb4c669abedece1d2915dd/Untitled%201.png">
+<meta property="og:updated_time" content="2024-05-28T16:40:29.666Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="失眠想睡觉的blog">
+<meta name="twitter:description" content="PaperStudy Learning from MistakesCreated by: N1rv0us ZhangCreated time: May 26, 2024 11:08 AMTags: appreciate, concurrent, non-professional, paper, system 序言上周回长沙和我的恩师们约饭交流，席间陈老师反复提到了 YY 团队的一篇经典论文；说来惭">
+<meta name="twitter:image" content="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/PaperStudy%20Learning%20from%20Mistakes%20b923d8063afb4c669abedece1d2915dd/Untitled.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/">
+
+
+
+
+
+  <title> | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2024/05/29/PaperStudy_Learning_from_Mistakes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-05-29T00:40:29+08:00">
+                2024-05-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="PaperStudy-Learning-from-Mistakes"><a href="#PaperStudy-Learning-from-Mistakes" class="headerlink" title="PaperStudy Learning from Mistakes"></a>PaperStudy Learning from Mistakes</h1><p>Created by: N1rv0us Zhang<br>Created time: May 26, 2024 11:08 AM<br>Tags: appreciate, concurrent, non-professional, paper, system</p>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>上周回长沙和我的恩师们约饭交流，席间陈老师反复提到了 YY 团队的一篇经典论文；说来惭愧，本科期间认真学下来的论文两个手都能数完，自然是没读过这篇 paper。但老师对这篇 paper 的讲述，我感觉一些场景，如BUG的发现、RCA(Root Cause Analysis), 确实能对我目前的一些工作有一些启发。</p>
+<p>回北京后，趁着周末闲暇的时间，再次找陈老师要到了这篇 paper 的原文。以我目前的状态，很难对一篇操作系统领域的经典论文有很深的理解，但希望能管中窥豹，学得一些优秀的 idea.</p>
+<p>那么本次学习的 paper : </p>
+<p>Learning from Mistakes — A Comprehensive Study on Real World Concurrency Bug Characteristics</p>
+<h1 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h1><p>本文重点研究并发软件的设计、测试以及出现的BUGs. 作者希望通过研究现实世界中出现过的bug 以及bug fix 找出并发软件设计过程中面临的实际困境。为此作者随机选取了几个经典的开源软件 ((MySQL, Apache, Mozilla and OpenOffice)中的并发 BUG 进行分析，汇总得出以下几条结论：</p>
+<ul>
+<li>结论汇总<ol>
+<li>Around one third of the examined non-deadlock concurrency bugs are caused by violation to programmers’ order intentions, which may not be easily expressed via synchronization primitives like locks and transactional memories; (BUG原因 : 设计预期)</li>
+<li>Around 34% of the examined non-deadlock concurrency bugs involve multiple variables, which are not well addressed by existing bug detection tools; (BUG原因 : 关联变量)</li>
+<li>About 92% of the examined concurrency bugs can be reliably triggered by enforcing certain orders among no more than 4 memory accesses. This indicates that testing concurrent programs can target at exploring possible orders among every small groups of memory accesses, instead of among all memory accesses; (测试与BUG 检测效率)</li>
+<li>About 73% of the examined non-deadlock concurrency bugs were not fixed by simply adding or changing locks, and many of the fixes were not correct at the first try, indicating the difficulty of reasoning concurrent execution by programmers. (BUG Fix)</li>
+</ol>
+</li>
+</ul>
+<h1 id="Contributions"><a href="#Contributions" class="headerlink" title="Contributions"></a>Contributions</h1><p>(特别备注本文发表自 2008 年)</p>
+<p>过于对于并发软件的研究集中在以下三个领域内，有很多不错的成果，但是仍有一些悬而未决的困难：</p>
+<ol>
+<li>Concurrency bug detection </li>
+<li>Concurrent program testing and model checking</li>
+<li>Concurrent programming language design</li>
+</ol>
+<p>作者针对几个经典开元软件的并发BUG进行 Case Study 之后，得出如下结论：</p>
+<p><img src="PaperStudy%20Learning%20from%20Mistakes%20b923d8063afb4c669abedece1d2915dd/Untitled.png" alt="Untitled"></p>
+<ul>
+<li>对于 Bug Patterns 研究的发现和启发：<ul>
+<li>97% 的非死锁 BUG 都可以归因于两种模式：atomicity-violation 和 order-violation. 对于并发bug检测的研究可以重点针对这两种模式；</li>
+<li>在所检查的非死锁错误中，约有三分之一（32%）的错误属于顺序违反错误，需要新的并发错误检测工具来检测顺序违反错误。</li>
+</ul>
+</li>
+<li>对于 Manifestation 研究的发现和启发 :<ul>
+<li>96% 的非死锁 BUG可以通过强制控制两个线程的执行顺序来触发，Pairwise testing 可以很好的检出大部分并发 BUG 并且较少测试的复杂程度；</li>
+<li>22% 的死锁 BUG 是单一线程在死等自己已经获取的资源，可以通过单一线程死锁检测来高效检出；</li>
+<li>66% 的非死锁并发 BUG仅关联单一共享变量， 34% 的非死锁并发 BUG关联了多个共享变量</li>
+<li>97% 的非死锁并发BUG包含两个线程循环等待最多两个资源；</li>
+<li>如果在不超过 4 次的内存访问中执行一定的部分顺序，几乎所有（92%）被检查出的并发错误都能得到保证。</li>
+</ul>
+</li>
+<li>对于 Bug Fix Strategies 研究的发现和启发：<ul>
+<li>四分之三（73%）的非死锁错误是通过添加/更改锁以外的技术修复的。程序员需要考虑正确性、性能和其他问题，以决定最合适的修复策略。</li>
+<li>61% 的死锁错误都是通过阻止一个线程获取一个资源（如锁）来修复的。这种修复方法可能会引入非死锁并发错误。</li>
+</ul>
+</li>
+<li>对于 Bug Avoidance 研究的发现和启发：<ul>
+<li>Transactional memory (TM) 可以帮助避免约 39% 的BUG；</li>
+<li>由于 bug 模式问题，约 19% 的并发 bug 不能够被 TM 设计模式修复；</li>
+</ul>
+</li>
+</ul>
+<h1 id="Methodology"><a href="#Methodology" class="headerlink" title="Methodology"></a>Methodology</h1><p>并发BUG RCA 的样本选择与问题定义分类如下图，同时，作者将选取的 BUG 分为死锁BUG与非死锁BUG，由于这两个问题的检测方式，修复方案都不相同。</p>
+<p><img src="PaperStudy%20Learning%20from%20Mistakes%20b923d8063afb4c669abedece1d2915dd/Untitled%201.png" alt="Untitled"></p>
+<p>整个研究围绕着三个并发BUG的概念：bug pattern, manifestation, and bug fix strategy</p>
+<ul>
+<li>bug pattern dimension :  将非死锁并发错误按其根本原因分为三类 (atomicity-violation bugs, order-violation bugs and the other bugs)</li>
+<li>manifestation : 研究了每个并发错误显现所需的条件，然后根据其显现条件涉及多少线程、多少变量和访问次数来讨论并发错误。</li>
+<li>bug fix strategy :  同时研究了漏洞修复的最终 patch 以及修复过程中的一些 patch。并且验证了  transactional memory 是如何帮助程序员们避免此类bug。</li>
+</ul>
+<h1 id="Conclusions"><a href="#Conclusions" class="headerlink" title="Conclusions"></a>Conclusions</h1><p>首先是作者的：</p>
+<p>对于 MySQL, Apache, Mozilla, and OpenOffice 现实并发BUG的Root Cause Analysis，在并发bug检测以及并发语言设计都有很不错的研究结果，同时也引导了下一步的研究方向；未来(对于 2024 年可能已经是过去了)的工作将会是多变量并发BUG检测工具或是指令顺序并发BUG检测工具的设计。工具将pairwisely test的方式测试。未来的论文也将持续关注其他现实Application中BUG 的 RCA.</p>
+<p>再来是我自己对这边论文的一些思考和感受：</p>
+<p>本文工作中的 RCA 部分与我日常工作中的CaseStudy相似，一些优秀的 RCA/CaseStudy 研究能够让我们更好的聚焦到一些同类问题的关键部分。配合后续的一些针对性的研究，不少同类型问题都可以在一定时间内得到收敛和解决。在这个方面 RCA 并不是一蹴而就的，而应当是周期内反复进行的。</p>
+<p>作为一篇 RCA 的paper，对于并发BUG的分析和总结十分的精炼、明确。但是由于这篇研究已经是10多年前的了，及时对并发问题十分感兴趣也需要重新做 RCA 工作了。我阅读的重点也主要放在如何做一次优秀的RCA上。</p>
+<p>总结下来，我感觉：</p>
+<ol>
+<li>一次优秀的 RCA 应当是为让后续的相关研究指明一条清晰的道路；在本次paper的研究中，对于bug分类、参与线程数量、共享变量数量的统计结果，阐述了 90% 以上的问题都是具备一些共性的，通过这些特性针对性的做后续的研究以及工具的开发和设计能够极大的降低成本和提升效率；</li>
+<li>一次优秀的 RCA 是以终为始的；在本次paper的研究工作中，对于目标的选取和研究的领域都是有提前的设计的。这让 RCA 成为了一个针对性的研究而非盲目的研究。最终在作者关注的领域内也得出了不错的结果和启示；</li>
+<li>RCA 选取的分析样本数量并不多，但是足够典型；作者选取了当年并发问题高发的现实软件(当然今天也很常用)的 100+ 个case。这让研究员可以认真的分析和分类，但样本量并不是很高，这也让我怀疑文中的百分比是否真的是有价值的 …</li>
+<li>RCA 需要阶段性的反复进行；这条并不是paper中写的，而是我的一些主观感受。由于 RCA 本身选取的样本并不是很高，而其结果又会让后续一段时间内的研究变得专注，我相信即使是天才研究员也没法保证每次的 RCA 得出的结论都是准确可靠的。为此阶段性的RCA就显得尤为重要，我们需要观察RCA指导下的后续研究是否有效的让一类问题得到了收敛以及上一个阶段RCA的结果在后续研究持续一段时间后结论是否依然可靠；</li>
+</ol>
+<p>最后，还有一些与 paper 研究无关的感受：这篇 paper 的行文非常的不错，全文都在围绕着作者的研究 — 现实世界Application并发BUG的 RCA 展开；我对操作系统的理解顶多就是一般本科毕业生的水平，但通篇读起来并没有吃力的地方(也可能是 10多年前的技术如今已经普及的原因)。作为一篇安全研究员的拓展阅读，可以在 RCA 相关工作中给我一些启发；如果我想深入并发语言设计和并发BUG检测 Section 3-5 部分对细节的描述也值得反复推敲。</p>
+<p>总之，这篇 paper 是值得拿来反复阅读的。由于我本身的工作并不是做并发相关的，我只是重点关注一篇优秀的 RCA paper 应当具备的品质。以后有机会深入了解软件并发，还会翻出来继续阅读的。</p>
+<p>That’s all. Good night.</p>
+<h1 id="Word-Study"><a href="#Word-Study" class="headerlink" title="Word Study"></a>Word Study</h1><ul>
+<li>prevalent : 普遍，常见，盛行；</li>
+<li>notorious : 臭名昭著的；</li>
+</ul>
+<h1 id="Ref"><a href="#Ref" class="headerlink" title="Ref"></a>Ref</h1><ul>
+<li><a href="https://www.cse.iitd.ac.in/~rijurekha/col380/concurrency-bugs.pdf" target="_blank" rel="noopener">https://www.cse.iitd.ac.in/~rijurekha/col380/concurrency-bugs.pdf</a></li>
+<li>关于事务内存 : <a href="https://zhuanlan.zhihu.com/p/151425608" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/151425608</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2024/05/29/Enjoy_Frida_Debug/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#PaperStudy-Learning-from-Mistakes"><span class="nav-number">1.</span> <span class="nav-text">PaperStudy Learning from Mistakes</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#序言"><span class="nav-number">2.</span> <span class="nav-text">序言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Abstract"><span class="nav-number">3.</span> <span class="nav-text">Abstract</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Contributions"><span class="nav-number">4.</span> <span class="nav-text">Contributions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Methodology"><span class="nav-number">5.</span> <span class="nav-text">Methodology</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusions"><span class="nav-number">6.</span> <span class="nav-text">Conclusions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Word-Study"><span class="nav-number">7.</span> <span class="nav-text">Word Study</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Ref"><span class="nav-number">8.</span> <span class="nav-text">Ref</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
