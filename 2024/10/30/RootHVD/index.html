@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="cn">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="HarmonyOS,技术杂谈,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="首先10月初，终于是官宣了Harmony Next系统。月底就已经有获取模拟器 Root 的方案了  HarmonyOS Next 模拟器 root | wuxianlin HarmonyOSNext模拟器Root（无视模拟器镜像完整性验证）HarmonyOSNext模拟器Root，无视模拟 - 掘金  我在DB1版本的模拟器中就通过类似的方法拿到了 root 权限。但是短短2个月之后的 DB3">
+<meta name="keywords" content="HarmonyOS,技术杂谈">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RootHVD 一步步获取鸿蒙模拟器Root">
+<meta property="og:url" content="http://N1rv0us@github.io/2024/10/30/RootHVD/index.html">
+<meta property="og:site_name" content="失眠想睡觉的blog">
+<meta property="og:description" content="首先10月初，终于是官宣了Harmony Next系统。月底就已经有获取模拟器 Root 的方案了  HarmonyOS Next 模拟器 root | wuxianlin HarmonyOSNext模拟器Root（无视模拟器镜像完整性验证）HarmonyOSNext模拟器Root，无视模拟 - 掘金  我在DB1版本的模拟器中就通过类似的方法拿到了 root 权限。但是短短2个月之后的 DB3">
+<meta property="og:locale" content="cn">
+<meta property="og:updated_time" content="2024-10-30T18:56:17.037Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RootHVD 一步步获取鸿蒙模拟器Root">
+<meta name="twitter:description" content="首先10月初，终于是官宣了Harmony Next系统。月底就已经有获取模拟器 Root 的方案了  HarmonyOS Next 模拟器 root | wuxianlin HarmonyOSNext模拟器Root（无视模拟器镜像完整性验证）HarmonyOSNext模拟器Root，无视模拟 - 掘金  我在DB1版本的模拟器中就通过类似的方法拿到了 root 权限。但是短短2个月之后的 DB3">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://N1rv0us@github.io/2024/10/30/RootHVD/">
+
+
+
+
+
+  <title>RootHVD 一步步获取鸿蒙模拟器Root | 失眠想睡觉的blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">失眠想睡觉的blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://N1rv0us@github.io/2024/10/30/RootHVD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="N1rv0us">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="失眠想睡觉的blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">RootHVD 一步步获取鸿蒙模拟器Root</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-10-30T00:00:00+08:00">
+                2024-10-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="首先"><a href="#首先" class="headerlink" title="首先"></a>首先</h2><p>10月初，终于是官宣了Harmony Next系统。月底就已经有获取模拟器 Root 的方案了</p>
+<blockquote>
+<p><a href="https://wuxianlin.com/2024/10/27/root-harmonyos-next-emultor/#%E9%95%9C%E5%83%8F%E4%B8%8B%E8%BD%BD" target="_blank" rel="noopener">HarmonyOS Next 模拟器 root | wuxianlin</a></p>
+<p><a href="https://juejin.cn/post/7430707283456376844" target="_blank" rel="noopener">HarmonyOSNext模拟器Root（无视模拟器镜像完整性验证）HarmonyOSNext模拟器Root，无视模拟 - 掘金</a></p>
+</blockquote>
+<p>我在DB1版本的模拟器中就通过类似的方法拿到了 root 权限。但是短短2个月之后的 DB3 就无法使用了。于是对于新的root获取方式的研究直到最近收到了上文的启发，才继续研究了一下，终于是又重获了 Root.</p>
+<p>本文就以技术随笔的形式，记录一下一步步获取到Root的思考过程</p>
+<h2 id="Topic1-获取到Root权限就一定是漏洞？"><a href="#Topic1-获取到Root权限就一定是漏洞？" class="headerlink" title="Topic1 : 获取到Root权限就一定是漏洞？"></a>Topic1 : 获取到Root权限就一定是漏洞？</h2><p>在 Android 时代的华为手机中，如果能获取到 root 权限就有机会在 PSIRT 上得到不菲的漏洞奖励。这主要是得益于 SecureBoot 保障了设备整个启动过程中是未被篡改的，再加上带有 Bootloader 锁的设备只允许刷入厂商认证的系统镜像；</p>
+<p>那么对于一个模拟器设备呢？</p>
+<p>Android 的大部分模拟器都是通过 qemu 来完成的。HarmonyOS 也是一样的，在开源的OpenHarmony 就提供了qemu的运行编译选项 (虽然按照教程文档编译可能会被坑到怀疑人生). 因此模拟器很难基于设备可信根来保障加载分区的完整性。此时，获取到Root权限理论上可以像 Android 刷入Magisk 一样简单；</p>
+<p>这就是为什么要选择模拟器来拿 Root 用于安全研究；</p>
+<h2 id="Topic2-Root-需要修改那些文件？"><a href="#Topic2-Root-需要修改那些文件？" class="headerlink" title="Topic2 : Root 需要修改那些文件？"></a>Topic2 : Root 需要修改那些文件？</h2><p>启动HarmonyOS模拟器之后，通过 ps 命令查看对应的进程，可以看到两个重要的文件路径：</p>
+<ul>
+<li><p>/Users/xxx/.Huawei/Emulator/deployed : 指向模拟器实例目录，保存实例相关文件，比如cache, user_data 等分区内容；</p>
+</li>
+<li><p>/Users/xxx/Library/Huawei/Sdk : 指向模拟器系统镜像，保存Kernel image, system, vendor等分区镜像；</p>
+</li>
+</ul>
+<p>一般需要直接系统配置文件都会保存在 system 分区，但是看下这个目录保存的内容会发现image_signature 目录保存了各个分区的签名：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> tree system-image/HarmonyOS-NEXT</span><br><span class="line">system-image/HarmonyOS-NEXT</span><br><span class="line">└── phone_arm</span><br><span class="line">    ├── Image</span><br><span class="line">    ├── features.ini</span><br><span class="line">    ├── image_signature</span><br><span class="line">    │   ├── Image.hwp7s</span><br><span class="line">    │   ├── ramdisk.img.hwp7s</span><br><span class="line">    │   ├── sys_prod.img.hwp7s</span><br><span class="line">    │   ├── system.img.hwp7s</span><br><span class="line">    │   ├── userdata.img.hwp7s</span><br><span class="line">    │   └── vendor.img.hwp7s</span><br><span class="line">    ├── info.json</span><br><span class="line">    ├── ramdisk.img</span><br><span class="line">    ├── sdk-pkg.json</span><br><span class="line">    ├── sys_prod.img</span><br><span class="line">    ├── system.img</span><br><span class="line">    ├── userdata.img</span><br><span class="line">    └── vendor.img</span><br></pre></td></tr></table></figure>
+
+<p>Emulator 在启动过程中会检查关键分区的完整性：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> cat Emulator.log | grep "verify succeed"</span><br><span class="line">[Info] [CheckImage.cpp(CheckSignUser:110)]USERimage is correct, verify succeed.</span><br><span class="line">[Info] [CheckImage.cpp(CheckSign:89)]SYSimage is correct, verify succeed.</span><br><span class="line">[Info] [CheckImage.cpp(CheckSignUser:110)]USERimage is correct, verify succeed.</span><br><span class="line">[Info] [CheckImage.cpp(CheckSign:89)]SYSimage is correct, verify succeed.</span><br><span class="line">[Info] [CheckImage.cpp(CheckSignUser:110)]USERimage is correct, verify succeed.</span><br><span class="line">[Info] [CheckImage.cpp(CheckSign:89)]SYSimage is correct, verify succeed.</span><br></pre></td></tr></table></figure>
+
+<p>因此贸然的修改 system.img 并不是一个明智的选择。可以选择修改qemu生成的system.img.qcow2 文件来绕过对 system.img 完整性的检查</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> file system.img.qcow2</span><br><span class="line">system.img.qcow2: QEMU QCOW2 Image (v3), has backing file (path /Users/listennter/Library/Huawei/Sdk/system-image/HarmonyOS-NEXT/phone_arm//system.img), 2508193792 bytes</span><br></pre></td></tr></table></figure>
+
+<p>qcow2 文件链接了 system.img 的路径，为了在修改方便首先将 qcow2 转换为 ext2 文件系统, 然后就可以使用mount挂在到linux系统上: </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> qemu-img convert -O raw system.img.qcow2 system.img.raw</span><br><span class="line"><span class="meta">#</span> mount -t ext4 -o loop system.img.raw ./hello</span><br></pre></td></tr></table></figure>
+
+<p>下面就开始调整系统中各项配置文件了</p>
+<h3 id="hdcd-cfg"><a href="#hdcd-cfg" class="headerlink" title="hdcd.cfg"></a>hdcd.cfg</h3><p>这个文件位于 /system/etc/init/hdcd.cfg, 其功能等效于 Android 系统中的 rc 文件，init 进程会依次加载各个 cfg 文件，完成系统服务的加载：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">"services" : [&#123;</span><br><span class="line">        "name" : "hdcd",</span><br><span class="line">        "path" : ["/system/bin/hdcd"], // 服务入口文件；</span><br><span class="line">        "caps" : ["CAP_NET_RAW"],      // capability</span><br><span class="line">        "uid" : "shell",               // hdcd service uid</span><br><span class="line">        "gid" : [ "shell", "log", "readproc", "file_manager", "user_data_rw", "netsys_socket" ],  // hdcd service gid</span><br><span class="line">        "socket" : [&#123;</span><br><span class="line">            "name" : "hdcd",</span><br><span class="line">            "family" : "AF_UNIX",</span><br><span class="line">            "type" : "SOCK_SEQPACKET",</span><br><span class="line">            "protocol" : "default",</span><br><span class="line">            "permissions" : "0660",</span><br><span class="line">            "uid" : "shell",</span><br><span class="line">            "gid" : "shell"</span><br><span class="line">        &#125;],</span><br><span class="line">        "critical" : [ 0, 5, 10 ],</span><br><span class="line">        "apl" : "normal",</span><br><span class="line">        "permission" : [</span><br><span class="line">            ...</span><br><span class="line">        ],</span><br><span class="line">        "permission_acls" : [</span><br><span class="line">            ...</span><br><span class="line">        ],</span><br><span class="line">        "sandbox" : 0,</span><br><span class="line">        "start-mode" : "condition",</span><br><span class="line">        "secon" : "u:r:hdcd:s0",       // hdcd service label</span><br><span class="line">        "disabled" : 1</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>那么实际上需要修改 uid/gid/secon 即可：</p>
+<ul>
+<li><p>“uid” : “root”</p>
+</li>
+<li><p>“gid” : [“root”, ….]</p>
+</li>
+<li><p>“secon” : “u:r:su:s0” (当然，参考了其他的blog发现这里无法调整成 su)</p>
+</li>
+</ul>
+<h3 id="system-common-cil"><a href="#system-common-cil" class="headerlink" title="system_common.cil"></a>system_common.cil</h3><p>该文件为 selinux policy 文件，保存路径为 /system/etc/selinux/system_common.cil</p>
+<p>把 <code>(type sh)</code> 变更为 <code>(typepermissive sh)</code>， 让sh变成一个不受selinux限制的特权用户；</p>
+<p>同时，这里也出现了第一个迷惑行为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> ls -al system/etc/selinux</span><br><span class="line">total 2644</span><br><span class="line">drwxr-xr-x.  5 root root    4096 Oct 19 18:47 .</span><br><span class="line">drwxr-xr-x. 85 root root    4096 Oct 19 18:47 ..</span><br><span class="line">drwxr-xr-x.  2 root root    4096 Oct 19 18:47 compatible</span><br><span class="line">drwxr-xr-x.  2 root root    4096 Oct 19 18:47 compatible_developer</span><br><span class="line">-rw-r--r--.  1 root root     624 Oct 19 18:47 config</span><br><span class="line">-rw-r--r--.  1 root root      45 Oct  8 10:02 ignore_cfg</span><br><span class="line">-rw-r--r--.  1 root root   81510 Oct 19 18:46 system.cil</span><br><span class="line">-rw-r--r--.  1 root root      65 Oct 19 18:46 system.cil.sha256</span><br><span class="line">-rw-r--r--.  1 root root 2415868 Oct 19 18:46 system_common.cil</span><br><span class="line">-rw-r--r--.  1 root root  168602 Oct 19 18:46 system_developer.cil</span><br><span class="line">-rw-r--r--.  1 root root      65 Oct 19 18:46 system_developer.cil.sha256</span><br></pre></td></tr></table></figure>
+
+<p>明明已经有 .sha256 文件来提供完整性校验能力，但是init在启动过程中却没有检查，导致了我直接修改 system_common.cil 文件内容仍然可以启动成功；</p>
+<h3 id="ohos-para-amp-hdc-para"><a href="#ohos-para-amp-hdc-para" class="headerlink" title="ohos.para &amp; hdc.para"></a>ohos.para &amp; hdc.para</h3><p>这两个文件相当于Android prop的各种属性</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// system/etc/param/ohos.para</span><br><span class="line">const.secure=0</span><br><span class="line">const.debuggable=1</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// system/etc/param/hdc.para  很明显这个文件定义了hdcd的开启模式，感觉该不该都可；</span><br><span class="line">persist.hdc.mode.usb = &quot;enable&quot;</span><br></pre></td></tr></table></figure>
+
+<p>完成全部修改后，安全umount，然后重新把分区转化为qcow2格式并替换掉 system.img.qcow2</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> sudo umount /home/xxx/hm/system.img.raw</span><br><span class="line"><span class="meta">$</span> qemu-img convert -O qcow2 system_out.img system_out.qcow2</span><br></pre></td></tr></table></figure>
+
+<p>启动HarmonyOS模拟器，发现 hdcd 服务挂掉了，Fxxk …</p>
+<h2 id="Bug-amp-Fix-the-Bug-amp-RCA"><a href="#Bug-amp-Fix-the-Bug-amp-RCA" class="headerlink" title="Bug &amp; Fix the Bug &amp; RCA"></a>Bug &amp; Fix the Bug &amp; RCA</h2><p>首先是查看 kernel log，发现 init 正常的拉起了 hdcd，但是，hdcd 貌似异常退出了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[    9.999149][    T1] [pid=1][Init][INFO][init_common_service.c:664]ServiceStart started info hdcd(pid 827 uid 0)</span><br><span class="line">[    9.999460][  T827] [pid=827][Init][INFO][init_service_socket.c:144]CreateSocket hdcd success</span><br><span class="line">[   10.001896][  T827] [pid=827][Init][INFO][init_service_socket.c:152]CreateSocket restoreContentRecurse /dev/unix/socket/hdcd success</span><br><span class="line">[   10.001960][  T827] [pid=827][Init][INFO][init_service.c:118]ServiceExec hdcd</span><br><span class="line">[   10.001996][  T827] [pid=827][Init][ERROR][init_service.c:132][startup_failed]failed to execv 0 1 hdcd</span><br></pre></td></tr></table></figure>
+
+<p>由于DB1和DB3版本的模拟器并未出现过 hdcd 异常退出的问题，只要从它们的system.img中复制一个 hdcd 过来就不会崩溃了；当我开心的重新启动模拟器并看到shell提示符已经是”#”时，最令我崩溃的BUG出现了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> id </span><br><span class="line">/bin/sh : /bin/id : Operation not permitted</span><br><span class="line"><span class="meta">#</span> ls </span><br><span class="line">/bin/sh : /bin/ls : Operation not permitted</span><br><span class="line"><span class="meta">#</span> whoami </span><br><span class="line">/bin/sh : /bin/whoami : Operation not permitted</span><br><span class="line"><span class="meta">#</span> getenforce</span><br><span class="line">Enforcing</span><br><span class="line"><span class="meta">#</span> setenforce 0</span><br><span class="line"><span class="meta">#</span> getenforce</span><br><span class="line">Permissive</span><br></pre></td></tr></table></figure>
+
+<p>当 hdcd 以shell uid 启动的时候，whoami等一系列系统命令都可以运行，但是只要切换到root 用户运行系统命令就会提示 <code>Operation not permitted</code>; </p>
+<p>这个莫名其妙的bug完全超越了我对 Linux 系统的理解，起初怀疑是在/bin/sh或者是kernel中埋入了一些小trick，但是IDA一顿逆向也没有发现任何的异常，于是我放弃了，想想能不能用其他的途径在 uid = shell的情况下把root能力补充上</p>
+<p>目前能够做到的包括：</p>
+<ol>
+<li><p><code>gid = root</code> : 已经具备了大部分目录的访问权限，但是，无法读写app的私有文件；</p>
+</li>
+<li><p><code>typepermissive sh</code> : 这赋予了hdc shell不被selinux规则拦截的权限；</p>
+</li>
+<li><p>自定义 capability :  在hdcd.cfg文件中，可以任意定义 capability；</p>
+</li>
+<li><p><code>uid = shell</code>  : 与root权限差距最大的部分；</p>
+</li>
+</ol>
+<p>最有操作空间的部分就是任意添加 capability 了，其中有几个对安全研究非常又帮助的</p>
+<ul>
+<li><p>CAP_SYS_PTRACE :  调试进程权限；</p>
+</li>
+<li><p>CAP_FOWNER : 忽略文件所有权；</p>
+</li>
+<li><p>CAP_SETUID : 设置进程 uid；</p>
+</li>
+<li><p>CAP_SETGID : 设置进程 gid；</p>
+</li>
+</ul>
+<p>CAP_SETUID/CAP_SETGID 这两个 capability 非常的吸引人，在之前获取Android root的blog中，在缺少了 seccomp-bpf 规则下，基于这两个 capability 就可以 fork 一个uid=root的进程；</p>
+<p>给hdcd赋予了一系列capability之后，基于类似的原理来试试将 hdcd shell 的子进程uid设置为root</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdlib&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/wait.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">set_uid_to_root</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (setuid(<span class="number">0</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">"Failed to set UID to root"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pid_t</span> pid = fork();</span><br><span class="line">    <span class="keyword">if</span> (pid &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cerr</span> &lt;&lt; <span class="string">"Failed to fork process"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pid == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 子进程：执行shell</span></span><br><span class="line">        execl(<span class="string">"/system/bin/sh"</span>, <span class="string">"sh"</span>, <span class="literal">nullptr</span>);</span><br><span class="line">        <span class="comment">// 如果execl返回，说明出错了</span></span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cerr</span> &lt;&lt; <span class="string">"Failed to execute shell"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 父进程：等待子进程结束</span></span><br><span class="line">        <span class="keyword">int</span> status;</span><br><span class="line">        waitpid(pid, &amp;status, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用 DevEco 提供的 clang++ 编译之后上传到 /data/local/tmp 目录下运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> id</span><br><span class="line">uid=0(root) gid=2000(shell) groups=2000(shell),1006(file_manager),1007(log),1008(user_data_rw),1097(netsys_socket),3009(readproc) context=u:r:sh:s0</span><br><span class="line"><span class="meta">#</span> getenforce</span><br><span class="line">Enforcing</span><br><span class="line"><span class="meta">#</span> setenforce</span><br><span class="line">usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]</span><br><span class="line"><span class="meta">#</span> setenforce 0</span><br><span class="line"><span class="meta">#</span> getenforce</span><br><span class="line">Permissive</span><br></pre></td></tr></table></figure>
+
+<p>神奇的一幕发生了，fork出来的root进程居然不会提示 Operation not permitted；原本只是想分析下抛出错误的原因，没想到误打误撞拿到了root …</p>
+<p>虽然通过上面一步步踩坑终于在最后拿到了完整的Root Shell，但还是不知道产生这一系列BUG的原因，直到看到其他 blog 直接用hdcd.root.cfg覆盖了原本的配置,  才发现了问题的根因：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">"services" : [&#123;</span><br><span class="line">        "name" : "hdcd",</span><br><span class="line">        "path" : ["/system/bin/hdcd"], </span><br><span class="line">        "caps" : ["CAP_NET_RAW"],      // Here's the point.</span><br><span class="line">        "uid" : "root",               </span><br><span class="line">        "gid" : [ "root", "shell", "log", "readproc", "file_manager", "user_data_rw", "netsys_socket" ],  // hdcd service gid</span><br><span class="line">        ...</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
+
+<p>Capabilities 是将 root 权限分解成多个独立的能力赋予给非root用户。原本root用户就具备了所有的Capability，然而 <code>&quot;caps&quot; : [&quot;CAP_NET_RAW&quot;]</code> 导致 init 进程又给已经是root用户的hdcd重新赋予了Capability，导致 hdcd 的一系列崩溃；</p>
+<p>实际上，移除掉 caps 的部分再重新打包 qcow2 即可</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/HarmonyOS/" rel="tag"># HarmonyOS</a>
+          
+            <a href="/tags/技术杂谈/" rel="tag"># 技术杂谈</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2024/05/29/PaperStudy_Learning_from_Mistakes/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">N1rv0us</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#首先"><span class="nav-number">1.</span> <span class="nav-text">首先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Topic1-获取到Root权限就一定是漏洞？"><span class="nav-number">2.</span> <span class="nav-text">Topic1 : 获取到Root权限就一定是漏洞？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Topic2-Root-需要修改那些文件？"><span class="nav-number">3.</span> <span class="nav-text">Topic2 : Root 需要修改那些文件？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hdcd-cfg"><span class="nav-number">3.1.</span> <span class="nav-text">hdcd.cfg</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#system-common-cil"><span class="nav-number">3.2.</span> <span class="nav-text">system_common.cil</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ohos-para-amp-hdc-para"><span class="nav-number">3.3.</span> <span class="nav-text">ohos.para &amp; hdc.para</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bug-amp-Fix-the-Bug-amp-RCA"><span class="nav-number">4.</span> <span class="nav-text">Bug &amp; Fix the Bug &amp; RCA</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">N1rv0us</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
